@@ -30,7 +30,9 @@ gameLoop p@Player{..} m@GameMap{..} = do
 		"w" -> goIfOk West
 		"n" -> goIfOk North
 		"s" -> goIfOk South
-		_ -> gameLoop p m
+		_ -> do
+			putStrLn "You stall in confusion."
+			gameLoop p m
 	where
 	goIfOk :: Direction -> IO ()
 	goIfOk d = if M.member c gameMap
