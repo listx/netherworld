@@ -40,6 +40,7 @@ importMap fp = do
 		}
 	where
 	mkTile (m, (x, y)) c = case c of
+		' ' -> (m, (x + 1, y))
 		'\n' -> (m, (0, y + 1))
 		c' -> ((M.insert coord (charToTile c') m), coordNew)
 		where
