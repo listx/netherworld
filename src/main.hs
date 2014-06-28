@@ -38,7 +38,7 @@ gameLoop p@Player{..} m@GameMap{..} = do
 	goIfOk d = if M.member c gameMap
 		then gameLoop p {playerCoord = c} m
 		else do
-			putStrLn "cannot go there"
+			putStrLn "You cannot go there."
 			gameLoop p m
 		where
 		c = goDir playerCoord d
