@@ -2,6 +2,7 @@
 
 module Main where
 
+import qualified Data.Map.Lazy as M
 import System.Environment
 
 import NW.Map
@@ -17,16 +18,25 @@ main = do
 		{ playerCoord = (0, 0)
 		}
 
-gameLoop :: Player -> Map -> IO ()
-gameLoop player gameMap = do
-	putStrLn $ cameraRegion gameMap player
-	putStrLn $ show (playerCoord player)
+gameLoop :: Player -> GameMap -> IO ()
+gameLoop p@Player{..} m@GameMap{..} = do
+	putStrLn $ miniMapView m 10 playerCoord
+	putStrLn $ show playerCoord
 	str <- getLine
 	case str of
 		"quit" -> return ()
 		"q" -> return ()
-		"e" -> gameLoop (goDir East (mapSize gameMap) player) gameMap
-		"w" -> gameLoop (goDir West (mapSize gameMap) player) gameMap
-		"n" -> gameLoop (goDir North (mapSize gameMap) player) gameMap
-		"s" -> gameLoop (goDir South (mapSize gameMap) player) gameMap
-		_ -> gameLoop player gameMap
+		"e" -> goIfOk East
+		"w" -> goIfOk West
+		"n" -> goIfOk North
+		"s" -> goIfOk South
+		_ -> gameLoop p m
+	where
+	goIfOk :: Direction -> IO ()
+	goIfOk d = if M.member c gameMap
+		then gameLoop p {playerCoord = c} m
+		else do
+			putStrLn "cannot go there"
+			gameLoop p m
+		where
+		c = goDir playerCoord d

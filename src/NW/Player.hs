@@ -2,6 +2,9 @@
 
 module NW.Player where
 
+import Data.List
+import qualified Data.Map.Lazy as M
+
 import NW.Map
 
 data Player = Player
@@ -15,44 +18,49 @@ data Direction
 	| South
 	deriving (Eq, Show)
 
-cameraRegion :: Map -> Player -> String
-cameraRegion m@Map{..} p@Player{..} = unlines $ regionTop ++ middle ++ regionBottom
+-- | Imagine the traditional Cartesian coordinates; we draw a square that is (n
+-- * 2 + 1) big on all sides, centered around the origin (0, 0), and we grab all
+-- the integer coordinates that fall inside this square. This is the set of
+-- offset coordinates (think of them as coordinates relative to the Player). We
+-- then modify these coordinates to their equivalents on the actual game map
+-- itself (at 'applyOffset'), and then convert each coordinate to the
+-- corresponding game map's tile. The way in which the final string is formed
+-- depends entirely on how the offset coordinates are first generated (see
+-- 'westernEdge').
+miniMapView :: GameMap -> Int -> Coord -> String
+miniMapView GameMap{..} n coordCenter@(xCenter, yCenter)
+	= intercalate "\n"
+	$ map (map (coordToChar . applyOffset) . genToEasternEdge) westernEdge
 	where
-	(x, y) = playerCoord
-	playerLine' = playerLine p m
-	(xMax, yMax) = mapSize m
-	middle = [buildLeft ++ "@" ++ buildRight]
-	regionTop = map buildLine [(y-padAmt)..(y-1)]
-	regionBottom = map buildLine [(y+1)..(y+padAmt)]
-	buildLeft = reverse $ foldl searchRange [] [(x-padAmt)..(x-1)]
-	buildRight = reverse $ foldl searchRange [] [(x+1)..(x+padAmt)]
-	buildLine y' = reverse $ foldl searchRange2 [] [(x-padAmt)..(x+padAmt)]
-		where
-		searchRange2 acc idx
-			| idx >= 0 && idx < xMax && y' >= 0 && y' < yMax = (rawStrs!!y')!!idx:acc
-			| otherwise = borderChar:acc
-	searchRange acc idx
-		| idx >= 0 && idx < xMax = playerLine'!!idx:acc
-		| otherwise = borderChar:acc
-	borderChar = toEnum 0x25a0
+	miniMapLen = n * 2 + 1
+	westernEdge :: [(Int, Int)]
+	westernEdge = zip (replicate miniMapLen (-n)) [n,(n-1)..]
+	genToEasternEdge (x, y) = [(x', y) | x' <- take miniMapLen [x..]]
+	coordToChar :: (Int, Int) -> Char
+	coordToChar c
+		| c /= coordCenter = case M.lookup c gameMap of
+			Just maybeTile -> case maybeTile of
+				Just t -> case t of
+					Grass -> '.'
+					Sand -> ','
+					Snow -> '*'
+					Water -> '~'
+				Nothing -> toEnum 0x25a0 -- map has this coordinate, but the tile type is unrecognized
+			Nothing -> 'X' -- map has no such coordinate
+		| otherwise = '@'
+	applyOffset (x, y) = (x + xCenter, y + yCenter)
 
-playerLine :: Player -> Map -> String
-playerLine Player{..} Map{..} = rawStrs!!(snd playerCoord)
-
-goDir :: Direction -> Coord -> Player -> Player
-goDir d (xMax, yMax) p@Player{..} = p { playerCoord = case d of
-	East -> if (x + 1) < xMax
-		then (x + 1, y)
-		else (x, y)
-	West -> if (x - 1) >= 0
-		then (x - 1, y)
-		else (x, y)
-	North -> if (y - 1) >= 0
-		then (x, y - 1)
-		else (x, y)
-	South -> if (y + 1) < yMax
-		then (x, y + 1)
-		else (x, y)
-	}
+sortCoordsByStrIdx :: [(Int, Int)] -> [(Int, Int)]
+sortCoordsByStrIdx = sortBy coordCompare
 	where
-	(x, y) = playerCoord
+	coordCompare (a, b) (a', b')
+		| b == b' = compare a a'
+		| b < b' = GT
+		| otherwise = LT
+
+goDir :: Coord -> Direction -> Coord
+goDir (x, y) d = case d of
+	East -> (x + 1, y)
+	West -> (x - 1, y)
+	North -> (x, y + 1)
+	South -> (x, y - 1)
