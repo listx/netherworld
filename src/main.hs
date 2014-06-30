@@ -2,7 +2,6 @@
 
 module Main where
 
-import qualified Data.Map.Lazy as M
 import System.Environment
 
 import NW.Map
@@ -20,7 +19,7 @@ main = do
 
 gameLoop :: Player -> GameMap -> IO ()
 gameLoop p@Player{..} m@GameMap{..} = do
-	putStrLn $ miniMapView m 10 playerCoord
+	putStrLn $ miniMapView m playerCoord
 	putStrLn $ show playerCoord
 	str <- getLine
 	case str of
@@ -35,9 +34,13 @@ gameLoop p@Player{..} m@GameMap{..} = do
 			gameLoop p m
 	where
 	goIfOk :: Direction -> IO ()
-	goIfOk d = if M.member c gameMap
-		then gameLoop p {playerCoord = c} m
-		else do
+	goIfOk d
+		| inRange m c = case midx gameMapVector c of
+			Just _ -> gameLoop p {playerCoord = c} m
+			Nothing -> do
+				putStrLn "You cannot go there."
+				gameLoop p m
+		| otherwise = do
 			putStrLn "You cannot go there."
 			gameLoop p m
 		where

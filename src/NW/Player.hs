@@ -3,7 +3,6 @@
 module NW.Player where
 
 import Data.List
-import qualified Data.Map.Lazy as M
 
 import NW.Map
 
@@ -27,28 +26,29 @@ data Direction
 -- corresponding game map's tile. The way in which the final string is formed
 -- depends entirely on how the offset coordinates are first generated (see
 -- 'westernEdge').
-miniMapView :: GameMap -> Int -> Coord -> String
-miniMapView GameMap{..} n coordCenter@(xCenter, yCenter)
+miniMapView :: GameMap -> Coord -> String
+miniMapView m@GameMap{..} coordCenter@(xCenter, yCenter)
 	= intercalate "\n"
 	$ map (map (coordToChar . applyOffset) . genToEasternEdge) westernEdge
 	where
+	n = padAmt
 	miniMapLen = n * 2 + 1
 	westernEdge :: [(Int, Int)]
 	westernEdge = zip (replicate miniMapLen (-n)) [n,(n-1)..]
 	genToEasternEdge (x, y) = [(x', y) | x' <- take miniMapLen [x..]]
 	coordToChar :: (Int, Int) -> Char
 	coordToChar c
-		| c /= coordCenter = case M.lookup c gameMap of
-			Just maybeTile -> case maybeTile of
-				Just t -> case t of
-					Grass -> '.'
-					Sand -> ','
-					Snow -> '*'
-					Water -> '~'
-				Nothing -> toEnum 0x25a0 -- map has this coordinate, but the tile type is unrecognized
-			Nothing -> 'X' -- map has no such coordinate
+		| not (inRange m c) = 'X'
+		| c /= coordCenter = getTile $ midx gameMapVector c
 		| otherwise = '@'
 	applyOffset (x, y) = (x + xCenter, y + yCenter)
+	getTile mr = case mr of
+		Just Room{..} -> case rTile of
+			Grass -> '.'
+			Sand -> ','
+			Snow -> '*'
+			Water -> '~'
+		Nothing -> 'X'
 
 sortCoordsByStrIdx :: [(Int, Int)] -> [(Int, Int)]
 sortCoordsByStrIdx = sortBy coordCompare
