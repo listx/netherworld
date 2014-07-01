@@ -37,22 +37,24 @@ gameLoop gs@GameState{..} = do
 	case str of
 		"quit" -> return ()
 		"q" -> return ()
-		"e" -> goIfOk East
-		"w" -> goIfOk West
-		"n" -> goIfOk North
-		"s" -> goIfOk South
+		"e" -> goIfOk str
+		"w" -> goIfOk str
+		"n" -> goIfOk str
+		"s" -> goIfOk str
+		"" -> goIfOk gsLastCommand
 		_ -> do
 			putStrLn "You stall in confusion."
 			gameLoop gs
 	where
 	m@GameMap{..} = gsGameMap
 	p@Player{..} = gsPlayer
-	goIfOk :: Direction -> IO ()
-	goIfOk d
+	goIfOk :: String -> IO ()
+	goIfOk str
 		| inRange m c = case midx gameMapVector c of
 			Just _ -> gameLoop gs
 				{ gsGameMap = m
 				, gsPlayer = p {playerCoord = c}
+				, gsLastCommand = str
 				}
 			Nothing -> do
 				putStrLn "You cannot go there."
@@ -61,4 +63,9 @@ gameLoop gs@GameState{..} = do
 			putStrLn "You cannot go there."
 			gameLoop gs
 		where
+		d = case str of
+			"e" -> East
+			"w" -> West
+			"n" -> North
+			_ -> South
 		c = goDir playerCoord d
