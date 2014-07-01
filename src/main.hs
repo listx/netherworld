@@ -41,6 +41,10 @@ gameLoop gs@GameState{..} = do
 		"w" -> goIfOk str
 		"n" -> goIfOk str
 		"s" -> goIfOk str
+		"ne" -> goIfOk str
+		"nw" -> goIfOk str
+		"se" -> goIfOk str
+		"sw" -> goIfOk str
 		"" -> goIfOk gsLastCommand
 		_ -> do
 			putStrLn "You stall in confusion."
@@ -64,8 +68,12 @@ gameLoop gs@GameState{..} = do
 			gameLoop gs
 		where
 		d = case str of
-			"e" -> East
-			"w" -> West
-			"n" -> North
-			_ -> South
-		c = goDir playerCoord d
+			"e" -> [East]
+			"w" -> [West]
+			"n" -> [North]
+			"s" -> [South]
+			"ne" -> [North, East]
+			"nw" -> [North, West]
+			"se" -> [South, East]
+			_ -> [South, West]
+		c = foldl goDir playerCoord d
