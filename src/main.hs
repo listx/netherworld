@@ -7,18 +7,30 @@ import System.Environment
 import NW.Map
 import NW.Player
 
+data GameState = GameState
+	{ gsGameMap :: GameMap
+	, gsPlayer :: Player
+	, gsLastCommand :: String
+	}
+
 main :: IO ()
 main = do
 	args <- getArgs
 	gameMap <- importMap $ head args
-	gameLoop player gameMap
+	let
+		gs = GameState
+			{ gsGameMap = gameMap
+			, gsPlayer = player
+			, gsLastCommand = ""
+			}
+	gameLoop gs
 	where
 	player = Player
 		{ playerCoord = (0, 0)
 		}
 
-gameLoop :: Player -> GameMap -> IO ()
-gameLoop p@Player{..} m@GameMap{..} = do
+gameLoop :: GameState -> IO ()
+gameLoop gs@GameState{..} = do
 	putStrLn $ miniMapView m playerCoord
 	putStrLn $ show playerCoord
 	str <- getLine
@@ -31,17 +43,22 @@ gameLoop p@Player{..} m@GameMap{..} = do
 		"s" -> goIfOk South
 		_ -> do
 			putStrLn "You stall in confusion."
-			gameLoop p m
+			gameLoop gs
 	where
+	m@GameMap{..} = gsGameMap
+	p@Player{..} = gsPlayer
 	goIfOk :: Direction -> IO ()
 	goIfOk d
 		| inRange m c = case midx gameMapVector c of
-			Just _ -> gameLoop p {playerCoord = c} m
+			Just _ -> gameLoop gs
+				{ gsGameMap = m
+				, gsPlayer = p {playerCoord = c}
+				}
 			Nothing -> do
 				putStrLn "You cannot go there."
-				gameLoop p m
+				gameLoop gs
 		| otherwise = do
 			putStrLn "You cannot go there."
-			gameLoop p m
+			gameLoop gs
 		where
 		c = goDir playerCoord d
