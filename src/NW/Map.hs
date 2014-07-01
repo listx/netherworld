@@ -42,8 +42,8 @@ data GameMap = GameMap
 -- the imported map). Because of this system, we have to reverse the lines
 -- before processing them. 'mkTile' simply converts each character encountered,
 -- and increments the x and y indices accordingly (x on each character, y on
--- each newline encountered).
-
+-- each newline encountered). We record which coordinates were defined by the
+-- file, and modify these one row at a time, with 'rowWise'.
 importMap :: FilePath -> IO GameMap
 importMap fp = do
 	src <- T.readFile fp
@@ -52,11 +52,11 @@ importMap fp = do
 		revSrc = T.unlines $ reverse srcLines
 		mapSizeX = fromIntegral . maximum $ map T.length srcLines
 		mapSizeY = length srcLines
-		hash :: V.Vector [(Coord, Maybe Room)]
-		hash = (\(_, _, rows) -> V.fromList $ reverse rows) $ T.foldl mkRoom ((0, 0), [], []) revSrc -- hash is a Vector, w/ each element (row) containing a LIST of coords
+		rooms :: V.Vector [(Coord, Maybe Room)]
+		rooms = (\(_, _, rows) -> V.fromList $ reverse rows) $ T.foldl mkRoom ((0, 0), [], []) revSrc
 	-- TODO: check input bounds
 	return $ GameMap
-		{ gameMapVector = V.map rowWise (V.zip (gmv (mapSizeX, mapSizeY)) $ hash)
+		{ gameMapVector = V.map rowWise (V.zip (gmv (mapSizeX, mapSizeY)) $ rooms)
 		, gameMapRange = (mapSizeX, mapSizeY)
 		}
 	where
