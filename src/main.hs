@@ -1,3 +1,4 @@
+{-# LANGUAGE MultiWayIf #-}
 {-# LANGUAGE RecordWildCards #-}
 
 module Main where
@@ -34,22 +35,20 @@ gameLoop gs@GameState{..} = do
 	putStrLn $ miniMapView m playerCoord
 	putStrLn $ show playerCoord
 	str <- getLine
-	case str of
-		"quit" -> return ()
-		"q" -> return ()
-		"e" -> goIfOk str
-		"w" -> goIfOk str
-		"n" -> goIfOk str
-		"s" -> goIfOk str
-		"ne" -> goIfOk str
-		"nw" -> goIfOk str
-		"se" -> goIfOk str
-		"sw" -> goIfOk str
-		"" -> goIfOk gsLastCommand
-		_ -> do
-			putStrLn "You stall in confusion."
-			gameLoop gs
+	let
+		tokens = words str
+	if length tokens > 0
+		then if
+			| elem (head tokens) directionals -> goIfOk str
+			| otherwise -> case head tokens of
+				"quit" -> return ()
+				"q" -> return ()
+				_ -> do
+					putStrLn "You stall in confusion."
+					gameLoop gs
+		else goIfOk gsLastCommand
 	where
+	directionals = ["e", "w", "n", "s", "ne", "nw", "se", "sw"]
 	m@GameMap{..} = gsGameMap
 	p@Player{..} = gsPlayer
 	goIfOk :: String -> IO ()
