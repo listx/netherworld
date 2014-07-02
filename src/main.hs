@@ -3,26 +3,32 @@
 
 module Main where
 
+import Control.Monad.Primitive
 import System.Environment
+import System.Random.MWC
 
 import NW.Map
 import NW.Player
+import NW.Random
 
 data GameState = GameState
 	{ gsGameMap :: GameMap
 	, gsPlayer :: Player
 	, gsLastCommand :: String
+	, gsRng :: Gen (PrimState IO)
 	}
 
 main :: IO ()
 main = do
 	args <- getArgs
 	gameMap <- importMap $ head args
+	rng <- mkGen $ SeedRandom
 	let
 		gs = GameState
 			{ gsGameMap = gameMap
 			, gsPlayer = player
 			, gsLastCommand = ""
+			, gsRng = rng
 			}
 	gameLoop gs
 	where
@@ -54,11 +60,16 @@ gameLoop gs@GameState{..} = do
 	goIfOk :: String -> IO ()
 	goIfOk str
 		| inRange m c = case midx gameMapVector c of
-			Just _ -> gameLoop gs
-				{ gsGameMap = m
-				, gsPlayer = p {playerCoord = c}
-				, gsLastCommand = str
-				}
+			Just _ -> do
+				roll <- uniformR ((0, 100)::(Int, Int)) gsRng
+				if (roll < 7)
+					then putStrLn "You enter a battle!!!"
+					else return ()
+				gameLoop gs
+					{ gsGameMap = m
+					, gsPlayer = p {playerCoord = c}
+					, gsLastCommand = str
+					}
 			Nothing -> do
 				putStrLn "You cannot go there."
 				gameLoop gs
