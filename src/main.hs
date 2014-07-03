@@ -3,20 +3,14 @@
 
 module Main where
 
-import Control.Monad.Primitive
 import System.Environment
-import System.Random.MWC
 
+import NW.Battle
 import NW.Map
 import NW.Player
 import NW.Random
-
-data GameState = GameState
-	{ gsGameMap :: GameMap
-	, gsPlayer :: Player
-	, gsLastCommand :: String
-	, gsRng :: Gen (PrimState IO)
-	}
+import NW.State
+import NW.Stats
 
 main :: IO ()
 main = do
@@ -27,6 +21,7 @@ main = do
 		gs = GameState
 			{ gsGameMap = gameMap
 			, gsPlayer = player
+			, gsMonsters = []
 			, gsLastCommand = ""
 			, gsRng = rng
 			}
@@ -34,6 +29,7 @@ main = do
 	where
 	player = Player
 		{ playerCoord = (0, 0)
+		, playerStats = statsBaseDefault
 		}
 
 gameLoop :: GameState -> IO ()
@@ -57,19 +53,24 @@ gameLoop gs@GameState{..} = do
 	directionals = ["e", "w", "n", "s", "ne", "nw", "se", "sw"]
 	m@GameMap{..} = gsGameMap
 	p@Player{..} = gsPlayer
-	goIfOk :: String -> IO ()
+--	goIfOk :: String -> IO GameState
 	goIfOk str
 		| inRange m c = case midx gameMapVector c of
 			Just _ -> do
-				roll <- uniformR ((0, 100)::(Int, Int)) gsRng
-				if (roll < 7)
-					then putStrLn "You enter a battle!!!"
-					else return ()
-				gameLoop gs
-					{ gsGameMap = m
-					, gsPlayer = p {playerCoord = c}
-					, gsLastCommand = str
-					}
+				let
+					gs1 = gs
+						{ gsGameMap = m
+						, gsPlayer = p {playerCoord = c}
+						, gsLastCommand = str
+						}
+				r <- roll 100 gsRng
+				if (r < 7)
+					then do
+						putStrLn "You enter a battle!!!"
+						gs2 <- spawnMonsters gs1
+						gs3 <- battleLoop gs2
+						gameLoop gs3
+					else gameLoop gs1
 			Nothing -> do
 				putStrLn "You cannot go there."
 				gameLoop gs

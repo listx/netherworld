@@ -74,7 +74,12 @@ randApply a f (x, y) rng
 	| y < 2 = error "randApply: denominator d is less than 2"
 	| x >= y = error "randApply: numerator is greater than denominator"
 	| otherwise = do
-		roll <- uniformR (0, y - 1) rng
-		if (roll < x)
+		r <- uniformR (0, y - 1) rng
+		if (r < x)
 			then return (f a)
 			else return a
+
+roll :: PrimMonad m => Int -> Gen (PrimState m) -> m Int
+roll n
+	| n < 2 = error "roll argument less than 2"
+	| otherwise = uniformR (1, n)

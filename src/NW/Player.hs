@@ -5,9 +5,11 @@ module NW.Player where
 import Data.List
 
 import NW.Map
+import NW.Stats
 
 data Player = Player
 	{ playerCoord :: Coord
+	, playerStats :: [Stat]
 	}
 
 data Direction
