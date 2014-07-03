@@ -53,7 +53,7 @@ gameLoop gs@GameState{..} = do
 	directionals = ["e", "w", "n", "s", "ne", "nw", "se", "sw"]
 	m@GameMap{..} = gsGameMap
 	p@Player{..} = gsPlayer
---	goIfOk :: String -> IO GameState
+	goIfOk :: String -> IO ()
 	goIfOk str
 		| inRange m c = case midx gameMapVector c of
 			Just _ -> do
