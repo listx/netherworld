@@ -49,9 +49,11 @@ battlePlayerOption gs@GameState{..} = do
 			if null gsMonsters2
 				then return gs
 					{ gsMonsters = []
+					, gsLastCommand = str
 					}
 				else return gs
 					{ gsMonsters = gsMonsters1
+					, gsLastCommand = str
 					}
 		_ -> do
 			putStrLn "What?"
