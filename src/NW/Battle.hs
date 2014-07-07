@@ -58,6 +58,8 @@ battlePlayerOption gs@GameState{..} = do
 		_ -> do
 			putStrLn "What?"
 			battlePlayerOption gs
+				{ gsLastCommand = str
+				}
 		where
 --		tokens = words str
 --		comHead = head tokens
