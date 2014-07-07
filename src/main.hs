@@ -23,6 +23,7 @@ main = do
 			, gsPlayer = player gameMap
 			, gsMonsters = []
 			, gsLastCommand = ""
+			, gsLastBattleCommand = ""
 			, gsRng = rng
 			}
 	gameLoop gs
@@ -74,9 +75,13 @@ gameLoop gs@GameState{..} = do
 			Nothing -> do
 				putStrLn "You cannot go there."
 				gameLoop gs
+					{ gsLastCommand = str
+					}
 		| otherwise = do
 			putStrLn "You cannot go there."
 			gameLoop gs
+				{ gsLastCommand = str
+				}
 		where
 		d = case str of
 			"e" -> [East]

@@ -36,7 +36,7 @@ battlePlayerOption gs@GameState{..} = do
 	str <- getLine
 	if length (words str) > 0
 		then runOption str
-		else runOption gsLastCommand
+		else runOption gsLastBattleCommand
 	where
 	runOption :: String -> IO GameState
 	runOption str = case str of
@@ -49,16 +49,16 @@ battlePlayerOption gs@GameState{..} = do
 			if null gsMonsters2
 				then return gs
 					{ gsMonsters = []
-					, gsLastCommand = str
+					, gsLastBattleCommand = ""
 					}
 				else return gs
 					{ gsMonsters = gsMonsters1
-					, gsLastCommand = str
+					, gsLastBattleCommand = str
 					}
 		_ -> do
 			putStrLn "What?"
 			battlePlayerOption gs
-				{ gsLastCommand = str
+				{ gsLastBattleCommand = str
 				}
 		where
 --		tokens = words str

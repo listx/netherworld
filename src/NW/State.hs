@@ -14,5 +14,6 @@ data GameState = GameState
 	, gsPlayer :: Player
 	, gsMonsters :: [Monster]
 	, gsLastCommand :: String
+	, gsLastBattleCommand :: String
 	, gsRng :: Gen (PrimState IO)
 	}
