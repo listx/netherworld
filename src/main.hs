@@ -20,15 +20,15 @@ main = do
 	let
 		gs = GameState
 			{ gsGameMap = gameMap
-			, gsPlayer = player
+			, gsPlayer = player gameMap
 			, gsMonsters = []
 			, gsLastCommand = ""
 			, gsRng = rng
 			}
 	gameLoop gs
 	where
-	player = Player
-		{ playerCoord = (0, 0)
+	player gm = Player
+		{ playerCoord = firstCoord gm
 		, playerStats = statsBaseDefault
 		}
 

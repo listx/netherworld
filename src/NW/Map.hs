@@ -2,7 +2,7 @@
 
 module NW.Map where
 
---import qualified Data.Map.Lazy as M
+import Data.Maybe
 import qualified Data.Text.Lazy as T
 import qualified Data.Text.Lazy.IO as T
 import qualified Data.Vector as V
@@ -97,3 +97,6 @@ inRange :: GameMap -> Coord -> Bool
 inRange GameMap{..} (x, y) = x >= 0 && x < xMax && y >= 0 && y < yMax
 	where
 	(xMax, yMax) = gameMapRange
+
+firstCoord :: GameMap -> Coord
+firstCoord = fst . V.head . V.filter (isJust . snd) . V.head . gameMapVector
