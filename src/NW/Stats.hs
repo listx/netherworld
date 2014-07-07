@@ -21,8 +21,7 @@ statsBaseDefault =
 
 modStat :: Attribute -> (Int -> Int) -> [Stat] -> [Stat]
 modStat attr f stats = case lookup attr stats of
-	Just n -> let
+	Just n -> (attr, f n):stats'
+		where
 		stats' = filter ((/=attr) . fst) stats
-		in
-		(attr, f n):stats'
 	Nothing -> stats
