@@ -3,6 +3,7 @@
 
 module Main where
 
+import qualified Data.Vector as V
 import System.Environment
 
 import NW.Battle
@@ -24,6 +25,8 @@ main = do
 			, gsMonsters = []
 			, gsLastCommand = ""
 			, gsLastBattleCommand = ""
+			, gsItemDB = V.empty
+			, gsMonsterDB = V.empty
 			, gsRng = rng
 			}
 	gameLoop gs

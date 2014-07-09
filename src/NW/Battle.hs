@@ -1,4 +1,5 @@
 {-# LANGUAGE MultiWayIf #-}
+{-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RecordWildCards #-}
 
 module NW.Battle where
@@ -18,7 +19,10 @@ spawnMonsters gs@GameState{..} = do
 	getMonster = do
 		r <- roll 100 gsRng
 		return $ Monster
-			{ mStatsBase = modStat Health (\_ -> r) $ statsBaseDefault
+			{ mClass = MCFighter
+			, mName = "monster"
+			, mStatsBase = modStat Health (\_ -> r) $ statsBaseDefault
+			, mLootBonus = 0
 			}
 
 battleLoop :: GameState -> IO GameState
