@@ -10,7 +10,7 @@ import NW.Stats
 data Player = Player
 	{ playerCoord :: Coord
 	, playerStats :: [Stat]
-	}
+	} deriving (Eq, Show)
 
 data Direction
 	= East
