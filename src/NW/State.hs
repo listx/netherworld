@@ -5,7 +5,7 @@ module NW.State where
 import Control.Monad.Primitive
 import System.Random.MWC
 
-import NW.Config
+import NW.Item
 import NW.Map
 import NW.Monster
 import NW.Player

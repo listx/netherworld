@@ -4,14 +4,15 @@
 module Main where
 
 import Data.Maybe
-import qualified Data.Vector as V
 import System.FilePath
 import System.Environment
 
 import NW.Battle
 import NW.Config
+import NW.Item
 import NW.Error
 import NW.Map
+import NW.Monster
 import NW.Player
 import NW.Random
 import NW.State
@@ -22,21 +23,27 @@ main = do
 	args <- getArgs
 	let
 		cfg = head args
-	config <- importConfig cfg
+	config <- decodeFileEither' cfg :: IO (Maybe Config)
 	failIfNothing config "Config"
 	let
 		config' = sanitizeConfig (takeDirectory cfg) $ fromJust config
 	gameMap <- importMap $ cfgMap config'
+	itemDB <- decodeFileEither' $ cfgItemDB config' :: IO (Maybe ItemDB)
+	failIfNothing itemDB "ItemDB"
+	monsterDB <- decodeFileEither' $ cfgMonsterDB config' :: IO (Maybe MonsterDB)
+	failIfNothing monsterDB "MonsterDB"
 	rng <- mkGen $ SeedRandom
 	let
+		itemDB' = fromJust itemDB
+		monsterDB' = fromJust monsterDB
 		gs = GameState
 			{ gsGameMap = gameMap
 			, gsPlayer = player gameMap
 			, gsMonsters = []
 			, gsLastCommand = ""
 			, gsLastBattleCommand = ""
-			, gsItemDB = V.empty
-			, gsMonsterDB = V.empty
+			, gsItemDB = itemDB'
+			, gsMonsterDB = monsterDB'
 			, gsRng = rng
 			}
 	gameLoop gs

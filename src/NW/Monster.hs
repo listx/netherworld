@@ -6,6 +6,7 @@ module NW.Monster where
 import Control.Applicative ((<$>), (<*>), pure)
 import Data.Aeson.Types
 import qualified Data.Text as T
+import qualified Data.Vector as V
 
 import NW.Stats
 import NW.Util
@@ -36,3 +37,5 @@ instance FromJSON Monster where
 		<*> o .: "stats"
 		<*> o .: "loot-bonus"
 	parseJSON v = typeMismatch "Monster" v
+
+type MonsterDB = V.Vector Monster

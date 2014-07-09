@@ -6,6 +6,7 @@ module NW.Item where
 import Control.Applicative ((<$>), (<*>), pure)
 import Data.Aeson.Types
 import qualified Data.Text as T
+import qualified Data.Vector as V
 
 import NW.Stats
 import NW.Util
@@ -45,3 +46,5 @@ instance FromJSON Item where
 		<*> o .: "stats-mods"
 		<*> o .: "bstats-mods"
 	parseJSON v = typeMismatch "Item" v
+
+type ItemDB = V.Vector Item
