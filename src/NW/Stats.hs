@@ -8,6 +8,7 @@ import Data.Aeson.Types
 import qualified Data.HashMap.Strict as H
 import qualified Data.Text as T
 
+import NW.Error
 import NW.Util
 
 data Attribute

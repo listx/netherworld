@@ -3,10 +3,14 @@
 
 module Main where
 
+import Data.Maybe
 import qualified Data.Vector as V
+import System.FilePath
 import System.Environment
 
 import NW.Battle
+import NW.Config
+import NW.Error
 import NW.Map
 import NW.Player
 import NW.Random
@@ -16,7 +20,13 @@ import NW.Stats
 main :: IO ()
 main = do
 	args <- getArgs
-	gameMap <- importMap $ head args
+	let
+		cfg = head args
+	config <- importConfig cfg
+	failIfNothing config "Config"
+	let
+		config' = sanitizeConfig (takeDirectory cfg) $ fromJust config
+	gameMap <- importMap $ cfgMap config'
 	rng <- mkGen $ SeedRandom
 	let
 		gs = GameState
