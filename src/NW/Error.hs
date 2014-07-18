@@ -1,10 +1,8 @@
 module NW.Error where
 
 import Control.Monad
-import Data.Aeson.Types
 import Data.List
 import Data.Maybe
-import Data.Yaml
 import System.Exit
 import System.IO
 
@@ -34,12 +32,3 @@ failIfNothing :: Maybe a -> String -> IO ()
 failIfNothing a name = when (isNothing a) $ do
 	errMsg $ "type " ++ squote name ++ " is Nothing"
 	exitFailure
-
-decodeFileEither' :: FromJSON a => FilePath -> IO (Maybe a)
-decodeFileEither' fp = do
-	x <- decodeFileEither fp
-	case x of
-		Left e -> do
-			errMsgn $ show e
-			return Nothing
-		Right a -> return $ Just a

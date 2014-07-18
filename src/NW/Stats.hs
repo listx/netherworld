@@ -3,71 +3,31 @@
 
 module NW.Stats where
 
-import Control.Applicative ((<$>), pure)
-import Data.Aeson.Types
-import qualified Data.HashMap.Strict as H
-import qualified Data.Text as T
-
-import NW.Error
-import NW.Util
+-- Stats are *finalized* values after all spells/effects/conditions etc. are
+-- applied to the character.
 
 data Attribute
 	= Health
 	| Mana
-	| Strength
-	| Wisdom
-	deriving (Eq, Enum, Show)
-
-type Stat = (Attribute, Int)
-
-instance FromJSON Attribute where
-	parseJSON (String t) = case lookup t' h of
-		Just a -> pure a
-		Nothing -> fail' t' (map fst h)
-		where
-		t' = T.unpack t
-		h = enumsHash $ enumFrom Health
-	parseJSON v = typeMismatch "Attribute" v
-
-data BattleAttribute
-	= Attack
-	| MAttack
-	| Defense
-	| MDefense
+	| Strength -- how much damage a physical attack does
+	| Wisdom -- how much damage a spell does
+	| Attack -- chance to hit enemy
+	| MAttack -- chance for spell to affect enemy
+	| Defense -- chance to evade a hit
+	| MDefense -- chance to evade a spell
+	| Damage Element
 	| Resist Element
 	deriving (Eq, Show)
 
-type BattleStat = (BattleAttribute, Int)
-
-instance FromJSON BattleAttribute where
-	parseJSON (String t) = case t' of
-		"attack" -> pure Attack
-		"mattack" -> pure MAttack
-		"defense" -> pure Defense
-		"mdefense" -> pure MDefense
-		_ -> fail "BattleAttribute: unexpected format"
-		where
-		t' = T.unpack t
-	parseJSON (Object o) = case H.toList o of
-		[("resist", o'@(Object _))] -> Resist <$> parseJSON o'
-		_ -> fail "BattleAttribute: unexpected format"
-	parseJSON v = typeMismatch "BattleAttribute" v
+type Stat = (Attribute, Int)
+type StatRange = (Attribute, (Int, Int))
 
 data Element
 	= Earth
 	| Fire
-	| Ice
+	| Cold
 	| Lightning
 	deriving (Eq, Enum, Show)
-
-instance FromJSON Element where
-	parseJSON (String t) = case lookup t' h of
-		Just a -> pure a
-		Nothing -> fail' t' (map fst h)
-		where
-		t' = T.unpack t
-		h = enumsHash $ enumFrom Earth
-	parseJSON v = typeMismatch "Element" v
 
 statsBaseDefault :: [Stat]
 statsBaseDefault =

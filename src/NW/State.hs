@@ -5,7 +5,7 @@ module NW.State where
 import Control.Monad.Primitive
 import System.Random.MWC
 
-import NW.Item
+import NW.Affix
 import NW.Map
 import NW.Monster
 import NW.Player
@@ -16,7 +16,7 @@ data GameState = GameState
 	, gsMonsters :: [Monster]
 	, gsLastCommand :: String
 	, gsLastBattleCommand :: String
-	, gsItemDB :: ItemDB
+	, gsAffixDB :: AffixDB
 	, gsMonsterDB :: MonsterDB
 	, gsRng :: Gen (PrimState IO)
 	}
