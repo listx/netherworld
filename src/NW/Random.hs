@@ -38,13 +38,22 @@ initialize' num = initialize . V.fromList . loop B.empty . B.pack $ octetsLE num
 	toW32s :: B.ByteString -> [Word32]
 	toW32s = map fromOctetsLE . chop 4 . B.unpack
 
-rndSelect :: Int -> [a] -> Gen (PrimState IO) -> IO [a]
-rndSelect 0 _ _ = return []
-rndSelect _ [] _ = return []
-rndSelect count xs gen = do
+-- | Randomly sample n elements from a list.
+rndSample :: PrimMonad m => Int -> [a] -> Gen (PrimState m) -> m [a]
+rndSample 0 _ _ = return []
+rndSample _ [] _ = return []
+rndSample count xs gen = do
 	idx <- uniformR (0, (length xs) - 1) gen
-	rest <- rndSelect (count - 1) (snd $ removeAt (idx + 1) xs) gen
+	rest <- rndSample (count - 1) (snd $ removeAt (idx + 1) xs) gen
 	return ((xs !! idx) : rest)
+
+-- | Randomly select a single element from a list.
+rndSelect :: PrimMonad m => [a] -> Gen (PrimState m) -> m a
+rndSelect xs rng
+	| null xs = error "choose: list is empty"
+	| otherwise = do
+		idx <- uniformR (0, length xs - 1) rng
+		return $ xs !! idx
 
 removeAt :: Int -> [a] -> (a, [a])
 removeAt n = (\(a, b) -> (head b, a ++ tail b)) . splitAt (n - 1)

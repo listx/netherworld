@@ -22,5 +22,5 @@ type Effect = (EffectType, NumberVal)
 data NumberVal
 	= NVConst Int
 	| NVPerc Int
-	| NVRange Int Int
+	| NVRange (Int, Int)
 	deriving (Eq, Show)

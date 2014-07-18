@@ -5,7 +5,9 @@
 
 module NW.Affix where
 
+import Control.Applicative
 import Control.Monad
+import "monads-tf" Control.Monad.Identity
 import qualified Data.Text.Lazy as T
 import qualified Data.Text.Lazy.IO as T
 import System.Exit
@@ -15,6 +17,7 @@ import Text.Parsec.Pos
 import Text.Parsec.Prim
 import Text.Parsec.Text.Lazy
 
+import NW.Effect
 import NW.Error
 import NW.Stats
 import NW.Util
@@ -29,7 +32,7 @@ type AffixName = String
 data Affix = Affix
 	{ affixClass :: AffixClass
 	, affixName :: AffixName
-	, affixEffects :: [StatRange]
+	, affixEffects :: [Effect]
 	} deriving (Eq, Show)
 
 type AffixDB = [Affix]
@@ -89,11 +92,10 @@ affixParser = do
 				affixClass'' = case affixClass' of
 					"adj" -> AffixAdj
 					_ -> AffixName
-				effs = getStatRanges effects
 			return $ Affix
 				{ affixClass = affixClass''
 				, affixName = affixName'
-				, affixEffects = effs
+				, affixEffects = effects
 				}
 
 addAffix
@@ -104,26 +106,39 @@ addAffix uNamePos aps@AffixParserState{..} = aps
 	{ apsAffixNames = uNamePos:apsAffixNames
 	}
 
-effectParser :: String -> AffixParser (String, (Int, Int))
+effectParser :: String -> AffixParser Effect
 effectParser affixName' = do
 	str <- choice' $ map t_symbol
 		[ "health"
 		, "mana"
 		]
+	let
+		effectType = case str of
+			"health" -> EAttribute Health
+			_ -> EAttribute Mana
 	posEffect <- getPosition
+	n <- numberValParser
+	return (effectType, n)
+
+numberValParser :: ParsecT T.Text u Identity NumberVal
+numberValParser = choice' $
+	[ numberValRangeParser
+	, numberValPercParser
+	, NVConst <$> intParser'
+	]
+
+numberValPercParser :: ParsecT T.Text u Identity NumberVal
+numberValPercParser = do
+	pos <- getPosition
+	n <- intParser
+	_ <- t_symbol "p"
+	return $ NVPerc n
+
+numberValRangeParser :: ParsecT T.Text u Identity NumberVal
+numberValRangeParser = do
+	posRange <- getPosition
 	range@(a, b) <- intRangeParser
 	if
-		| a > b -> valueBeyondRange (affixName' ++ ": " ++ str) (a, posEffect)
-		| a < 2 -> valueBeyondRange (affixName' ++ ": " ++ str) (a, posEffect)
-		| otherwise -> return (str, range)
-
-getStatRanges :: [(String, (Int, Int))] -> [StatRange]
-getStatRanges = map toStatRange
-
-toStatRange :: (String, (Int, Int)) -> StatRange
-toStatRange (str, range) = (stat, range)
-	where
-	stat = case str of
-		"health" -> Health
-		"mana" -> Health
-		_ -> error $ "unknown attribute: " ++ str
+		| a > b -> valueBeyondRange "range" (a, posRange)
+		| a < 2 -> valueBeyondRange "range" (a, posRange)
+		| otherwise -> return $ NVRange range

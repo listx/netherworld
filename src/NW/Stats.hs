@@ -17,6 +17,7 @@ data Attribute
 	| MDefense -- chance to evade a spell
 	| Damage Element
 	| Resist Element
+	| LifeSteal
 	deriving (Eq, Show)
 
 type Stat = (Attribute, Int)
