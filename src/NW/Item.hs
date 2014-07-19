@@ -92,6 +92,11 @@ instance Variate Gear where
 --		| a > b = uniformR (b, a) rng
 --		| otherwise = return . toEnum =<< uniformR (fromEnum a, fromEnum b) rng
 
+
+instance Variate AffixClass where
+	uniform rng = return . toEnum =<< uniformR (fromEnum ACAdj, fromEnum ACName) rng
+	uniformR _ _ = error "uniformR: Accessory unsupported"
+
 -- | Generate a random item. This function should be called when a monster dies
 -- and we need to create loot.
 genRandomItem :: PrimMonad m => AffixDB -> Gen (PrimState m) -> m Item
@@ -100,9 +105,21 @@ genRandomItem adb rng = do
 	affixes <- case ic of
 		ICGear _ -> do
 			-- You can have up to 2 affixes. If we pick a NAME affix, our 2nd
-			-- affix must be an ADJ affix.
-			n <- uniformR (0, 2) rng
-			rndSample n adb rng
+			-- affix must be an ADJ affix. NAME affixes are generally more
+			-- powerful (at least, they are supposed to be more powerful), so
+			-- there is only a small percent chance that we'll get a NAME affix.
+
+			-- The possibilities are:
+			-- * 1 adj only ("steel gloves") (can't just be 'gloves' because that's too barren)
+			-- * 1 proper noun suffix ("gloves of the bear")
+			-- * 1 noun suffix ("shield of doom")
+			-- * 1 persona ("assassin's dagger" or "dagger of the assassin")
+			-- * 1 name only ("daniel's gloves" or "shield of achilles")
+
+			-- For simplicity's sake, we only choose 1 affix.
+			ac <- uniform rng
+			affix <- rndSelect (filter ((== ac) . affixClass) adb) rng
+			return [affix]
 		-- there should be a handful of hardcoded potion types that are
 		-- essential to the game, regardless of the kind of game content (e.g.,
 		-- health potion, mega health potion, mana potion, elixir, etc>), and
@@ -112,6 +129,46 @@ genRandomItem adb rng = do
 		{ itemClass = ic
 		, itemAffixes = affixes
 		}
+
+-- | The higher the rating, the more "valuable" the item, all things equal. This
+-- function is useful for at least two situations: (1) random item generation
+-- and (2) item shops (merchant AI's valuation of an item).
+itemRating :: Item -> Int
+itemRating Item{..} = sum $ map affixRating itemAffixes
+
+affixRating :: Affix -> Int
+affixRating Affix{..} = affixClassRating + (sum $ map effectRating affixEffects)
+	where
+	affixClassRating = case affixClass of
+		ACAdj -> 10
+		ACNoun -> 20
+		ACNounProper -> 20
+		ACPersona -> 30
+		ACName -> 40
+
+effectRating :: Effect -> Int
+effectRating (effectType, nv) = effectTypeRating effectType * nvRating nv
+
+effectTypeRating :: EffectType -> Int
+effectTypeRating et = case et of
+	EAttribute Health -> 10
+	EAttribute Mana -> 10
+	EAttribute Strength -> 10
+	EAttribute Wisdom -> 10
+	EAttribute Attack -> 7
+	EAttribute MAttack -> 7
+	EAttribute Defense -> 7
+	EAttribute MDefense -> 7
+	EAttribute (Damage _) -> 5
+	EAttribute (Resist _) -> 5
+	EAttribute LifeSteal -> 8
+	EGameMechanics MagicItemFind -> 3
+	EGameMechanics GoldEarned -> 2
+
+nvRating :: NumberVal -> Int
+nvRating (NVConst n) = n
+nvRating (NVPerc n) = n
+nvRating (NVRange (a, b)) = div (sum [a..b]) $ length [a..b]
 
 renderItem :: Item -> String
 renderItem Item{..} = prefix ++ noun ++ suffix
@@ -124,5 +181,11 @@ renderItem Item{..} = prefix ++ noun ++ suffix
 		ICPotion -> "Potion"
 	(prefix, suffix)
 		| null itemAffixes = ("", "")
---		| length itemAffixes > 1 =
-		| otherwise = ("", "")
+		| otherwise = case affixClass of
+			ACAdj -> (affixName, "")
+			ACNoun -> ("", " of " ++ affixName)
+			ACNounProper -> ("", " of the " ++ affixName)
+			ACPersona -> (affixName ++ "'s ", "") -- "Killer's" or "Assassin's"
+			ACName -> ("", " of " ++ affixName)
+		where
+		Affix{..} = head itemAffixes

@@ -23,9 +23,12 @@ import NW.Stats
 import NW.Util
 
 data AffixClass
-	= AffixAdj
-	| AffixName
-	deriving (Eq, Show)
+	= ACAdj -- "Icy" or "Incinerating"
+	| ACNoun -- "of Lamentation"
+	| ACNounProper -- "of the Bear"
+	| ACPersona -- "Killer's" or "Assassin's"
+	| ACName -- "Daniel's" or "of Achilles"
+	deriving (Eq, Enum, Show)
 
 type AffixName = String
 
@@ -73,29 +76,28 @@ affixParser :: AffixParser Affix
 affixParser = do
 	AffixParserState{..} <- getState
 	_ <- t_symbol "affix"
-	affixClass' <- choice' $ map t_symbol
-		[ "adj"
-		, "name"
+	affixClass' <- choice' $ map (\(a, b) -> t_symbol a >> return b)
+		[ ("adj", ACAdj)
+		, ("noun-proper", ACNoun)
+		, ("noun", ACNounProper)
+		, ("persona", ACPersona)
+		, ("name", ACName)
 		]
 
 	posAffixName <- getPosition
 	affixName' <- t_stringLiteral
 
-	effects <- many1 $ effectParser affixName'
+	effectss <- many1 $ effectsParser affixName'
 
 	if
 		| elem affixName' (map fst apsAffixNames)
 			-> duplicateDefinition "affix" apsAffixNames (affixName', posAffixName)
 		| otherwise -> do
 			modifyState $ addAffix (affixName', posAffixName)
-			let
-				affixClass'' = case affixClass' of
-					"adj" -> AffixAdj
-					_ -> AffixName
 			return $ Affix
-				{ affixClass = affixClass''
+				{ affixClass = affixClass'
 				, affixName = affixName'
-				, affixEffects = effects
+				, affixEffects = concat $ effectss
 				}
 
 addAffix
@@ -106,24 +108,55 @@ addAffix uNamePos aps@AffixParserState{..} = aps
 	{ apsAffixNames = uNamePos:apsAffixNames
 	}
 
-effectParser :: String -> AffixParser Effect
-effectParser affixName' = do
-	str <- choice' $ map t_symbol
-		[ "health"
-		, "mana"
+effectsParser :: String -> AffixParser [Effect]
+effectsParser affixName' = do
+	effectTypes <- choice' $ map (\(a, b) -> t_symbol a >> return b)
+		[ ("health", [EAttribute Health])
+		, ("mana", [EAttribute Mana])
+		, ("strength", [EAttribute Strength])
+		, ("wisdom", [EAttribute Wisdom])
+		, ("attack", [EAttribute Attack])
+		, ("magic-attack", [EAttribute MAttack])
+		, ("defense", [EAttribute Defense])
+		, ("magic-defense", [EAttribute MDefense])
+		, ("damage-earth", [EAttribute (Damage Earth)])
+		, ("damage-fire", [EAttribute (Damage Fire)])
+		, ("damage-cold", [EAttribute (Damage Cold)])
+		, ("damage-lightning", [EAttribute (Damage Lightning)])
+		,
+			( "damage-all"
+			,
+				[ EAttribute (Damage Earth)
+				, EAttribute (Damage Fire)
+				, EAttribute (Damage Cold)
+				, EAttribute (Damage Lightning)
+				]
+			)
+		, ("resist-earth", [EAttribute (Resist Lightning)])
+		, ("resist-fire", [EAttribute (Resist Lightning)])
+		, ("resist-cold", [EAttribute (Resist Lightning)])
+		, ("resist-lightning", [EAttribute (Resist Lightning)])
+		,
+			( "resist-all"
+			,
+				[ EAttribute (Resist Earth)
+				, EAttribute (Resist Fire)
+				, EAttribute (Resist Cold)
+				, EAttribute (Resist Lightning)
+				]
+			)
+		, ("lifesteal", [EAttribute LifeSteal])
+		, ("magic-item-find", [EGameMechanics MagicItemFind])
+		, ("gold-earned", [EGameMechanics GoldEarned])
 		]
-	let
-		effectType = case str of
-			"health" -> EAttribute Health
-			_ -> EAttribute Mana
 	posEffect <- getPosition
 	n <- numberValParser
-	return (effectType, n)
+	return . zip effectTypes $ repeat n
 
 numberValParser :: ParsecT T.Text u Identity NumberVal
 numberValParser = choice' $
-	[ numberValRangeParser
-	, numberValPercParser
+	[ numberValPercParser
+	, numberValRangeParser
 	, NVConst <$> intParser'
 	]
 
