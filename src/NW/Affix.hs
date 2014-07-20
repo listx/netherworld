@@ -78,8 +78,8 @@ affixParser = do
 	_ <- t_symbol "affix"
 	affixClass' <- choice' $ map (\(a, b) -> t_symbol a >> return b)
 		[ ("adj", ACAdj)
-		, ("noun-proper", ACNoun)
-		, ("noun", ACNounProper)
+		, ("noun-proper", ACNounProper)
+		, ("noun", ACNoun)
 		, ("persona", ACPersona)
 		, ("name", ACName)
 		]

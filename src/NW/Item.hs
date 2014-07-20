@@ -182,7 +182,7 @@ renderItem Item{..} = prefix ++ noun ++ suffix
 	(prefix, suffix)
 		| null itemAffixes = ("", "")
 		| otherwise = case affixClass of
-			ACAdj -> (affixName, "")
+			ACAdj -> (affixName ++ " ", "")
 			ACNoun -> ("", " of " ++ affixName)
 			ACNounProper -> ("", " of the " ++ affixName)
 			ACPersona -> (affixName ++ "'s ", "") -- "Killer's" or "Assassin's"
