@@ -114,7 +114,7 @@ genRandomItem adb rng = do
 			-- For simplicity's sake, we only choose 1 affix.
 			ac <- uniform rng
 			affix <- rndSelect (filter ((== ac) . affixClass) adb) rng
-			return [affix]
+			mapM (rasterizeAffix rng) [affix]
 		-- there should be a handful of hardcoded potion types that are
 		-- essential to the game, regardless of the kind of game content (e.g.,
 		-- health potion, mega health potion, mana potion, elixir, etc>), and
@@ -124,6 +124,26 @@ genRandomItem adb rng = do
 		{ itemClass = ic
 		, itemAffixes = affixes
 		}
+
+
+-- | The only modifier that affects the player at a variable rate is damage done; all others (health, mana, defense, resistance, life steal, etc.) affect the character at a constant rate. Thus, we "rasterize" any NVRange value we find for damage modifiers.
+rasterizeAffix :: PrimMonad m => Gen (PrimState m) -> Affix -> m Affix
+rasterizeAffix rng affix@Affix{..} = do
+	es <- mapM (rasterizeEffect rng) affixEffects
+	return $ affix
+		{ affixEffects = es
+		}
+
+-- | Only rasterize non-damage-dealing effects.
+rasterizeEffect :: PrimMonad m => Gen (PrimState m) -> Effect -> m Effect
+rasterizeEffect rng effect@(et, nv) = case et of
+	EAttribute Damage -> return effect
+	EAttribute (DamageE _) -> return effect
+	_ -> case nv of
+		NVRange (a, b) -> do
+			c <- uniformR (a, b) rng
+			return (et, (NVConst c))
+		_ -> return effect
 
 -- | The higher the rating, the more "valuable" the item, all things equal. This
 -- function is useful for at least two situations: (1) random item generation
