@@ -18,7 +18,7 @@ import NW.Player
 import NW.Random
 import NW.State
 import NW.Stats
---import NW.Util
+import NW.Util
 
 main :: IO ()
 main = do
@@ -40,7 +40,6 @@ main = do
 --	failIfNothing monsterDB "MonsterDB"
 	rng <- mkGen $ SeedRandom
 	let
---		monsterDB' = fromJust monsterDB
 		gs = GameState
 			{ gsGameMap = gameMap
 			, gsPlayer = player gameMap
@@ -51,8 +50,6 @@ main = do
 			, gsMonsterDB = []
 			, gsRng = rng
 			}
---	pshow affixDB'
---	pshow monsterDB'
 	gameLoop gs
 	where
 	player gm = Player
