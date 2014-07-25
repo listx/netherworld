@@ -92,7 +92,7 @@ affixParser = do
 	posAffixName <- getPosition
 	affixName' <- t_stringLiteral
 
-	effectss <- many1 $ effectsParser affixName'
+	effectss <- many1 effectsParser
 
 	if
 		| elem affixName' (map fst apsAffixNames)
@@ -113,8 +113,8 @@ addAffix uNamePos aps@AffixParserState{..} = aps
 	{ apsAffixNames = uNamePos:apsAffixNames
 	}
 
-effectsParser :: String -> AffixParser [Effect]
-effectsParser affixName' = do
+effectsParser :: AffixParser [Effect]
+effectsParser = do
 	effectTypes <- choice' $ map (\(a, b) -> t_symbol a >> return b)
 		[ ("health", [EAttribute Health])
 		, ("mana", [EAttribute Mana])
@@ -154,7 +154,6 @@ effectsParser affixName' = do
 		, ("magic-item-find", [EGameMechanics MagicItemFind])
 		, ("gold-earned", [EGameMechanics GoldEarned])
 		]
-	posEffect <- getPosition
 	n <- numberValParser
 	return . zip effectTypes $ repeat n
 
@@ -167,7 +166,6 @@ numberValParser = choice' $
 
 numberValPercParser :: ParsecT T.Text u Identity NumberVal
 numberValPercParser = do
-	pos <- getPosition
 	n <- intParser
 	_ <- t_symbol "p"
 	return $ NVPerc n
