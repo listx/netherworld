@@ -12,6 +12,7 @@ import qualified Data.Text.Lazy as T
 import qualified Data.Text.Lazy.IO as T
 import System.Exit
 import System.IO
+import System.Random.MWC
 import Text.Parsec.Combinator
 import Text.Parsec.Pos
 import Text.Parsec.Prim
@@ -29,6 +30,10 @@ data AffixClass
 	| ACPersona -- "Killer's" or "Assassin's"
 	| ACName -- "Daniel's" or "of Achilles"
 	deriving (Eq, Enum, Show)
+
+instance Variate AffixClass where
+	uniform rng = return . toEnum =<< uniformR (fromEnum ACAdj, fromEnum ACName) rng
+	uniformR _ _ = error "uniformR: Accessory unsupported"
 
 type AffixName = String
 

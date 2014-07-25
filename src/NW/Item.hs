@@ -92,11 +92,6 @@ instance Variate Gear where
 --		| a > b = uniformR (b, a) rng
 --		| otherwise = return . toEnum =<< uniformR (fromEnum a, fromEnum b) rng
 
-
-instance Variate AffixClass where
-	uniform rng = return . toEnum =<< uniformR (fromEnum ACAdj, fromEnum ACName) rng
-	uniformR _ _ = error "uniformR: Accessory unsupported"
-
 -- | Generate a random item. This function should be called when a monster dies
 -- and we need to create loot.
 genRandomItem :: PrimMonad m => AffixDB -> Gen (PrimState m) -> m Item
