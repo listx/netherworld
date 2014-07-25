@@ -32,3 +32,8 @@ failIfNothing :: Maybe a -> String -> IO ()
 failIfNothing a name = when (isNothing a) $ do
 	errMsg $ "type " ++ squote name ++ " is Nothing"
 	exitFailure
+
+failIfEmpty :: [a] -> String -> IO ()
+failIfEmpty a name = when (null a) $ do
+	errMsg $ "type " ++ squote name ++ " is empty"
+	exitFailure

@@ -7,6 +7,7 @@ import Data.Maybe
 import System.FilePath
 import System.Environment
 
+import NW.Affix
 import NW.Battle
 import NW.Config
 --import NW.Item
@@ -33,13 +34,12 @@ main = do
 	let
 		config' = sanitizeConfig (takeDirectory cfg) $ fromJust config
 	gameMap <- importMap $ cfgMap config'
---	affixDB <- decodeFileEither' $ cfgAffixDB config' :: IO (Maybe AffixDB)
---	failIfNothing affixDB "AffixDB"
+	affixDB <- importGMAffixes $ cfgAffixDB config'
+	failIfEmpty affixDB "AffixDB"
 --	monsterDB <- decodeFileEither' $ cfgMonsterDB config' :: IO (Maybe MonsterDB)
 --	failIfNothing monsterDB "MonsterDB"
 	rng <- mkGen $ SeedRandom
 	let
---		affixDB' = fromJust affixDB
 --		monsterDB' = fromJust monsterDB
 		gs = GameState
 			{ gsGameMap = gameMap
@@ -47,7 +47,7 @@ main = do
 			, gsMonsters = []
 			, gsLastCommand = ""
 			, gsLastBattleCommand = ""
-			, gsAffixDB = []
+			, gsAffixDB = affixDB
 			, gsMonsterDB = []
 			, gsRng = rng
 			}
