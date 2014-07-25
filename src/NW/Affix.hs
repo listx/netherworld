@@ -115,7 +115,7 @@ addAffix uNamePos aps@AffixParserState{..} = aps
 
 effectsParser :: AffixParser [Effect]
 effectsParser = do
-	effectTypes <- choice' $ map (\(a, b) -> symbolOnly a >> return b)
+	effectTypes <- choice' $ map (\(a, b) -> symbolWhiteSpace a >> return b)
 		[ ("health", [EAttribute Health])
 		, ("mana", [EAttribute Mana])
 		, ("strength", [EAttribute Strength])

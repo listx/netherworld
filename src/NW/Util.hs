@@ -135,8 +135,8 @@ symbolA str parser = do
 	a <- parser
 	return (pos, a)
 
-symbolOnly :: String -> ParsecT T.Text u Identity ()
-symbolOnly str = do
+symbolWhiteSpace :: String -> ParsecT T.Text u Identity ()
+symbolWhiteSpace str = do
 	_ <- string str
 	_ <- lookAhead $ oneOf " \t\n"
 	return ()
