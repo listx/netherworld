@@ -3,9 +3,7 @@
 
 module NW.Effect where
 
-import NW.Error
 import NW.Stats
-import NW.Util
 
 data EffectType
 	= EAttribute Attribute

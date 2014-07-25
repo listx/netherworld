@@ -27,7 +27,7 @@ instance Variate ItemClass where
 			0 -> do
 				gear <- uniform rng
 				return $ ICGear gear
-			1 -> return ICPotion
+			_ -> return ICPotion
 	uniformR _ _ = error "uniformR: ItemClass unsupported"
 
 data Gear
@@ -84,7 +84,7 @@ instance Variate Gear where
 		x <- case g of
 			0 -> return . GArmor =<< uniform rng
 			1 -> return . GWeapon =<< uniform rng
-			2 -> return . GAccessory =<< uniform rng
+			_ -> return . GAccessory =<< uniform rng
 		return x
 	uniformR _ _ = error "uniformR: Gear unsupported"
 --	uniformR (a, b) rng

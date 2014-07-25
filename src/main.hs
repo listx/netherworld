@@ -9,7 +9,7 @@ import System.Environment
 
 import NW.Battle
 import NW.Config
-import NW.Item
+--import NW.Item
 import NW.Error
 import NW.Map
 --import NW.Monster
