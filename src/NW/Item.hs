@@ -154,7 +154,8 @@ effectTypeRating et = case et of
 	EAttribute MAttack -> 7
 	EAttribute Defense -> 7
 	EAttribute MDefense -> 7
-	EAttribute (Damage _) -> 5
+	EAttribute Damage -> 9
+	EAttribute (DamageE _) -> 5
 	EAttribute (Resist _) -> 5
 	EAttribute LifeSteal -> 8
 	EGameMechanics MagicItemFind -> 3

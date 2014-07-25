@@ -124,17 +124,18 @@ effectsParser = do
 		, ("magic-attack", [EAttribute MAttack])
 		, ("defense", [EAttribute Defense])
 		, ("magic-defense", [EAttribute MDefense])
-		, ("damage-earth", [EAttribute (Damage Earth)])
-		, ("damage-fire", [EAttribute (Damage Fire)])
-		, ("damage-cold", [EAttribute (Damage Cold)])
-		, ("damage-lightning", [EAttribute (Damage Lightning)])
+		, ("damage", [EAttribute Damage])
+		, ("damage-earth", [EAttribute (DamageE Earth)])
+		, ("damage-fire", [EAttribute (DamageE Fire)])
+		, ("damage-cold", [EAttribute (DamageE Cold)])
+		, ("damage-lightning", [EAttribute (DamageE Lightning)])
 		,
 			( "damage-all"
 			,
-				[ EAttribute (Damage Earth)
-				, EAttribute (Damage Fire)
-				, EAttribute (Damage Cold)
-				, EAttribute (Damage Lightning)
+				[ EAttribute (DamageE Earth)
+				, EAttribute (DamageE Fire)
+				, EAttribute (DamageE Cold)
+				, EAttribute (DamageE Lightning)
 				]
 			)
 		, ("resist-earth", [EAttribute (Resist Lightning)])

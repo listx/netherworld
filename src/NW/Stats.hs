@@ -15,7 +15,8 @@ data Attribute
 	| MAttack -- chance for spell to affect enemy
 	| Defense -- chance to evade a hit
 	| MDefense -- chance to evade a spell
-	| Damage Element
+	| Damage -- how much base damage an item does
+	| DamageE Element
 	| Resist Element
 	| LifeSteal
 	deriving (Eq, Show)
