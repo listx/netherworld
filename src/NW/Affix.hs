@@ -115,7 +115,7 @@ addAffix uNamePos aps@AffixParserState{..} = aps
 
 effectsParser :: AffixParser [Effect]
 effectsParser = do
-	effectTypes <- choice' $ map (\(a, b) -> t_symbol a >> return b)
+	effectTypes <- choice' $ map (\(a, b) -> symbolOnly a >> return b)
 		[ ("health", [EAttribute Health])
 		, ("mana", [EAttribute Mana])
 		, ("strength", [EAttribute Strength])
@@ -155,6 +155,7 @@ effectsParser = do
 		, ("magic-item-find", [EGameMechanics MagicItemFind])
 		, ("gold-earned", [EGameMechanics GoldEarned])
 		]
+	_ <- t_whiteSpace
 	n <- numberValParser
 	return . zip effectTypes $ repeat n
 

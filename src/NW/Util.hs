@@ -135,6 +135,12 @@ symbolA str parser = do
 	a <- parser
 	return (pos, a)
 
+symbolOnly :: String -> ParsecT T.Text u Identity ()
+symbolOnly str = do
+	_ <- string str
+	_ <- lookAhead $ oneOf " \t\n"
+	return ()
+
 sourceLC :: SourcePos -> String
 sourceLC sp = paren $ "line "
 	++ (show $ sourceLine sp)
