@@ -41,6 +41,7 @@ parseConfig fname src = case parse configParser fname src of
 
 configParser :: Parser Config
 configParser = do
+	_ <- t_whiteSpace
 	_ <- t_symbol "map"
 	m <- t_stringLiteral
 
