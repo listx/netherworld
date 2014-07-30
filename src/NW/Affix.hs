@@ -92,7 +92,7 @@ affixParser = do
 	posAffixName <- getPosition
 	affixName' <- t_stringLiteral
 
-	effectss <- many1 effectsParser
+	effects <- many1 effectParser
 
 	if
 		| elem affixName' (map fst apsAffixNames)
@@ -102,7 +102,7 @@ affixParser = do
 			return $ Affix
 				{ affixClass = affixClass'
 				, affixName = affixName'
-				, affixEffects = concat $ effectss
+				, affixEffects = effects
 				}
 
 addAffix
@@ -113,51 +113,35 @@ addAffix uNamePos aps@AffixParserState{..} = aps
 	{ apsAffixNames = uNamePos:apsAffixNames
 	}
 
-effectsParser :: AffixParser [Effect]
-effectsParser = do
-	effectTypes <- choice' $ map (\(a, b) -> symbolWhiteSpace a >> return b)
-		[ ("health", [EAttribute Health])
-		, ("mana", [EAttribute Mana])
-		, ("strength", [EAttribute Strength])
-		, ("wisdom", [EAttribute Wisdom])
-		, ("attack", [EAttribute Attack])
-		, ("magic-attack", [EAttribute MAttack])
-		, ("defense", [EAttribute Defense])
-		, ("magic-defense", [EAttribute MDefense])
-		, ("damage", [EAttribute Damage])
-		, ("damage-earth", [EAttribute (DamageE Earth)])
-		, ("damage-fire", [EAttribute (DamageE Fire)])
-		, ("damage-cold", [EAttribute (DamageE Cold)])
-		, ("damage-lightning", [EAttribute (DamageE Lightning)])
-		,
-			( "damage-all"
-			,
-				[ EAttribute (DamageE Earth)
-				, EAttribute (DamageE Fire)
-				, EAttribute (DamageE Cold)
-				, EAttribute (DamageE Lightning)
-				]
-			)
-		, ("resist-earth", [EAttribute (Resist Lightning)])
-		, ("resist-fire", [EAttribute (Resist Lightning)])
-		, ("resist-cold", [EAttribute (Resist Lightning)])
-		, ("resist-lightning", [EAttribute (Resist Lightning)])
-		,
-			( "resist-all"
-			,
-				[ EAttribute (Resist Earth)
-				, EAttribute (Resist Fire)
-				, EAttribute (Resist Cold)
-				, EAttribute (Resist Lightning)
-				]
-			)
-		, ("lifesteal", [EAttribute LifeSteal])
-		, ("magic-item-find", [EGameMechanics MagicItemFind])
-		, ("gold-earned", [EGameMechanics GoldEarned])
+effectParser :: AffixParser Effect
+effectParser = do
+	effectType <- choice' $ map (\(a, b) -> symbolWhiteSpace a >> return b)
+		[ ("health", EAttribute Health)
+		, ("mana", EAttribute Mana)
+		, ("strength", EAttribute Strength)
+		, ("wisdom", EAttribute Wisdom)
+		, ("attack", EAttribute Attack)
+		, ("magic-attack", EAttribute MAttack)
+		, ("defense", EAttribute Defense)
+		, ("magic-defense", EAttribute MDefense)
+		, ("damage", EAttribute Damage)
+		, ("damage-earth", EAttribute (DamageE Earth))
+		, ("damage-fire", EAttribute (DamageE Fire))
+		, ("damage-cold", EAttribute (DamageE Cold))
+		, ("damage-lightning", EAttribute (DamageE Lightning))
+		, ("damage-all", EAttribute (DamageE ElementAll))
+		, ("resist-earth", EAttribute (Resist Earth))
+		, ("resist-fire", EAttribute (Resist Fire))
+		, ("resist-cold", EAttribute (Resist Cold))
+		, ("resist-lightning", EAttribute (Resist Lightning))
+		, ("resist-all" , EAttribute (Resist ElementAll))
+		, ("lifesteal", EAttribute LifeSteal)
+		, ("magic-item-find", EGameMechanics MagicItemFind)
+		, ("gold-earned", EGameMechanics GoldEarned)
 		]
 	_ <- t_whiteSpace
 	n <- numberValParser
-	return . zip effectTypes $ repeat n
+	return (effectType, n)
 
 numberValParser :: ParsecT T.Text u Identity NumberVal
 numberValParser = choice' $

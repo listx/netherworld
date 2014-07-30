@@ -29,6 +29,7 @@ data Element
 	| Fire
 	| Cold
 	| Lightning
+	| ElementAll
 	deriving (Eq, Enum, Show)
 
 statsBaseDefault :: [Stat]
