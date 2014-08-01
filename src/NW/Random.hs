@@ -6,7 +6,7 @@ import Control.Monad.Primitive
 import qualified Crypto.Hash.SHA1 as SHA1
 import Data.Bits
 import qualified Data.ByteString.Lazy as B
-import Data.List (foldl')
+import Data.List (foldl', nub, transpose)
 import Data.Time.Calendar
 import Data.Time.Clock
 import qualified Data.Vector as V
@@ -14,29 +14,53 @@ import Data.Word
 import System.Random.MWC
 
 data NWSeed
-	= SeedManual Word32
+	= SeedEmpty
+	| SeedManual [Word32]
 	| SeedToday
 	| SeedRandom
 	deriving (Eq, Show)
 
+-- | For SeedManual, we limit [Word32] to 258 elements, because that is the
+-- maximum number of elements System.Random.MWC deals with.
 mkGen :: NWSeed -> IO GenIO
 mkGen s = case s of
-	SeedManual n -> initialize' n
-	SeedToday -> initialize' . (fromIntegral . toModifiedJulianDay . utctDay)
+	SeedEmpty -> initialize $ V.empty
+	SeedManual ns -> initialize $ initialize' ns
+	SeedToday -> initialize
+		. initialize'
+		. ((:[]) . fromIntegral . toModifiedJulianDay . utctDay)
 		=<< getCurrentTime
 	SeedRandom -> createSystemRandom
 
-initialize' :: PrimMonad m => Word32 -> m (Gen (PrimState m))
-initialize' num = initialize . V.fromList . loop B.empty . B.pack $ octetsLE num
+-- | The MWC RNG internally uses a state of 256 Word32's (`ws`), an index value
+-- `i` that wraps around 0-255 (a single 'byte' in C), and a mutable constant
+-- value `c` that changes with each iteration of the RNG. For simplicity, both
+-- `i` and `c` are Word32 values.
+initialize' :: [Word32] -> V.Vector Word32
+initialize' ns
+	| any (==0) wsc = error "one or more values in either `ws` or `c` is 0"
+	| length (nub ws) /= length ws = error "some values in `ws` are the same"
+	| otherwise = set_i_c $ V.fromList . xorJoin $ map (loop B.empty . B.pack . octetsLE) ws
 	where
 	loop :: B.ByteString -> B.ByteString -> [Word32]
 	loop acc bs
-		| B.length acc >= (256 * 4) = toW32s acc
+		| B.length acc >= (256 * 4) = take 256 $ toW32s acc
 		| otherwise = loop
 			(B.append acc . B.fromStrict $ SHA1.hashlazy bs)
 			(B.fromStrict $ SHA1.hashlazy bs)
 	toW32s :: B.ByteString -> [Word32]
 	toW32s = map fromOctetsLE . chop 4 . B.unpack
+	xorJoin :: [[Word32]] -> [Word32]
+	xorJoin = map (foldl' xor 0) . transpose
+	ws = take 256 ns
+	wsc = ws ++ drop 257 ns
+	ic = drop 256 ns
+	set_i_c v
+		| length ns == 258 = v V.++ (V.fromList [i, c])
+		| otherwise = v
+		where
+		i = ic !! 0
+		c = ic !! 1
 
 -- | Randomly sample n elements from a list.
 rndSample :: PrimMonad m => Int -> [a] -> Gen (PrimState m) -> m [a]
