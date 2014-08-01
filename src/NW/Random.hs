@@ -62,6 +62,13 @@ initialize' ns
 		i = ic !! 0
 		c = ic !! 1
 
+warmup :: Int -> GenIO -> IO Word64
+warmup n rng
+	| n < 1 = error "n must be at least 1"
+	| otherwise = do
+		runs <- mapM (\_ -> uniform rng :: IO Word64) [1..n]
+		return $ last runs
+
 -- | Randomly sample n elements from a list.
 rndSample :: PrimMonad m => Int -> [a] -> Gen (PrimState m) -> m [a]
 rndSample 0 _ _ = return []
