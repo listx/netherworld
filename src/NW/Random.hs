@@ -56,11 +56,8 @@ initialize' ns
 	wsc = ws ++ drop 257 ns
 	ic = drop 256 ns
 	set_i_c v
-		| length ns == 258 = v V.++ (V.fromList [i, c])
+		| length ns == 258 = v V.++ (V.fromList ic)
 		| otherwise = v
-		where
-		i = ic !! 0
-		c = ic !! 1
 
 warmup :: Int -> GenIO -> IO Word64
 warmup n rng
