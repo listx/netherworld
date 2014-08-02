@@ -38,7 +38,7 @@ main = do
 	failIfEmpty affixDB "AffixDB"
 --	monsterDB <- decodeFileEither' $ cfgMonsterDB config' :: IO (Maybe MonsterDB)
 --	failIfNothing monsterDB "MonsterDB"
-	rng <- mkGen $ SeedRandom
+	rng <- mkGen $ SeedManual [1..258]
 	let
 		gs = GameState
 			{ gsGameMap = gameMap
