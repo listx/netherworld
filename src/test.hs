@@ -39,3 +39,4 @@ main = do
 		rng <- mkGen seed
 		n <- warmup 100000 rng
 		putStrLn $ show n
+		putStrLn . show =<< roll 10 rng
