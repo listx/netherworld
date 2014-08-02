@@ -40,16 +40,10 @@ initialize' :: [Word32] -> V.Vector Word32
 initialize' ns
 	| any (==0) wsc = error "one or more values in either `ws` or `c` is 0"
 	| length (nub ws) /= length ws = error "some values in `ws` are the same"
-	| otherwise = set_i_c $ V.fromList . xorJoin $ map (loop B.empty . B.pack . octetsLE) ws
+	| otherwise = set_i_c
+		. V.fromList . xorJoin
+		$ map (shaInflate B.empty . B.pack . octetsLE) ws
 	where
-	loop :: B.ByteString -> B.ByteString -> [Word32]
-	loop acc bs
-		| B.length acc >= (256 * 4) = take 256 $ toW32s acc
-		| otherwise = loop
-			(B.append acc . B.fromStrict $ SHA1.hashlazy bs)
-			(B.fromStrict $ SHA1.hashlazy bs)
-	toW32s :: B.ByteString -> [Word32]
-	toW32s = map fromOctetsLE . chop 4 . B.unpack
 	xorJoin :: [[Word32]] -> [Word32]
 	xorJoin = map (foldl' xor 0) . transpose
 	ws = take 256 ns
@@ -58,6 +52,16 @@ initialize' ns
 	set_i_c v
 		| length ns == 258 = v V.++ (V.fromList ic)
 		| otherwise = v
+
+shaInflate :: B.ByteString -> B.ByteString -> [Word32]
+shaInflate acc bs
+	| B.length acc >= (256 * 4) = take 256 $ toW32s acc
+	| otherwise = shaInflate
+		(B.append acc . B.fromStrict $ SHA1.hashlazy bs)
+		(B.fromStrict $ SHA1.hashlazy bs)
+
+toW32s :: B.ByteString -> [Word32]
+toW32s = map fromOctetsLE . chop 4 . B.unpack
 
 warmup :: Int -> GenIO -> IO Word64
 warmup n rng
