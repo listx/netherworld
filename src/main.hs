@@ -10,15 +10,12 @@ import System.Environment
 import NW.Affix
 import NW.Battle
 import NW.Config
---import NW.Item
 import NW.Error
 import NW.Map
---import NW.Monster
 import NW.Player
 import NW.Random
 import NW.State
 import NW.Stats
-import NW.Util
 
 main :: IO ()
 main = do
@@ -36,8 +33,6 @@ main = do
 	gameMap <- importMap $ cfgMap config'
 	affixDB <- importGMAffixes $ cfgAffixDB config'
 	failIfEmpty affixDB "AffixDB"
---	monsterDB <- decodeFileEither' $ cfgMonsterDB config' :: IO (Maybe MonsterDB)
---	failIfNothing monsterDB "MonsterDB"
 	rng <- mkGen $ SeedManual [1..258]
 	let
 		gs = GameState
