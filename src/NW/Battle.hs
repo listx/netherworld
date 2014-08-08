@@ -31,25 +31,25 @@ battleLoop gs0 = do
 	gs2 <- battleMonsterOption gs1
 	if
 		| null (gsMonsters gs2) -> do
-			putStrLn "You defeat all monsters!"
+			nwPuts gs2 "You defeat all monsters!"
 			return gs2
 		| otherwise -> battleLoop gs2
 
 battlePlayerOption :: GameState -> IO GameState
-battlePlayerOption gs@GameState{..} = do
+battlePlayerOption gs = do
 	(gs1, str) <- getUserInput gs
 	let
 		tokens = words str
 		str1 = if length tokens > 0
-		then str
-		else gsLastBattleCommand
+			then str
+			else gsLastBattleCommand gs1
 	case str1 of
 		"f" -> do
-			r <- roll 100 gsRng
+			r <- roll 100 $ gsRng gs1
 			let
-				gsMonsters1 = map (modMonsterStat Health (\n -> n - r)) gsMonsters
+				gsMonsters1 = map (modMonsterStat Health (\n -> n - r)) $ gsMonsters gs1
 				gsMonsters2 = filter monsterAlive gsMonsters1
-			putStrLn $ "You do " ++ show r ++ " damage!"
+			nwPuts gs1 $ "You do " ++ show r ++ " damage!"
 			if null gsMonsters2
 				then return gs1
 					{ gsMonsters = []
@@ -60,7 +60,7 @@ battlePlayerOption gs@GameState{..} = do
 					, gsLastBattleCommand = str1
 					}
 		_ -> do
-			putStrLn "What?"
+			nwPuts gs1 "What?"
 			battlePlayerOption gs1
 				{ gsLastBattleCommand = str1
 				}

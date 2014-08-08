@@ -69,6 +69,8 @@ t_whiteSpace :: ParsecT T.Text u Identity ()
 t_whiteSpace = whiteSpace lexer
 t_braces :: ParsecT T.Text u Identity a -> ParsecT T.Text u Identity a
 t_braces = braces lexer
+t_brackets :: ParsecT T.Text u Identity a -> ParsecT T.Text u Identity a
+t_brackets = brackets lexer
 t_stringLiteral :: ParsecT T.Text u Identity String
 t_stringLiteral = stringLiteral lexer
 t_commaSep1 :: ParsecT T.Text u Identity a -> ParsecT T.Text u Identity [a]
@@ -90,6 +92,19 @@ intParser = do
 intParser' :: ParsecT T.Text u Identity Int
 intParser' = do
 	n <- intParser
+	_ <- t_whiteSpace
+	return n
+
+uintParser :: ParsecT T.Text u Identity Int
+uintParser = do
+	n <- t_decimal
+	let
+		n' = fromIntegral n
+	return n'
+
+uintParser' :: ParsecT T.Text u Identity Int
+uintParser' = do
+	n <- uintParser
 	_ <- t_whiteSpace
 	return n
 

@@ -19,6 +19,12 @@ data Direction
 	| South
 	deriving (Eq, Show)
 
+initPlayer :: GameMap -> Player
+initPlayer gm = Player
+	{ playerCoord = firstCoord gm
+	, playerStats = statsBaseDefault
+	}
+
 -- | Imagine the traditional Cartesian coordinates; we draw a square that is (n
 -- * 2 + 1) big on all sides, centered around the origin (0, 0), and we grab all
 -- the integer coordinates that fall inside this square. This is the set of
