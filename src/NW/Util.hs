@@ -3,13 +3,11 @@
 
 module NW.Util where
 
---import Control.Monad
 import "monads-tf" Control.Monad.Identity
 import Data.Char
 import Data.List
 import Data.Maybe
 import qualified Data.Text.Lazy as T
---import Numeric
 import Text.Parsec.Char
 import Text.Parsec.Combinator
 import Text.Parsec.Pos
@@ -169,8 +167,6 @@ headingBody :: [String] -> [String] -> String
 headingBody heading body = (intercalate "\n" heading)
 	++ "\n"
 	++ (intercalate "\n" $ map indent body)
-	where
-	indent str = "  " ++ str
 
 parseErrMsg :: (Eq a, Show a, Monad m) => String -> String -> (String, a, SourcePos) -> m b
 parseErrMsg msg valLocation (valType, val, pos) = fail
@@ -182,3 +178,13 @@ parseErrMsg msg valLocation (valType, val, pos) = fail
 		[ valLocation
 		, valType ++ ": " ++ show val
 		]
+
+showTuple :: (Show a, Show b) => (a, b) -> String
+showTuple (a, b) = show a ++ " " ++ show b
+
+indent :: String -> String
+indent s = "\t" ++ s
+
+chop :: Int -> [a] -> [[a]]
+chop _ [] = []
+chop n xs = take n xs : chop n (drop n xs)

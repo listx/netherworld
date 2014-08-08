@@ -13,6 +13,8 @@ import qualified Data.Vector as V
 import Data.Word
 import System.Random.MWC
 
+import NW.Util
+
 data NWSeed
 	= SeedEmpty
 	| SeedManual [Word32]
@@ -104,10 +106,6 @@ fromOctetsBE = foldl' accum 0
 
 fromOctetsLE :: [Word8] -> Word32
 fromOctetsLE = fromOctetsBE . reverse
-
-chop :: Int -> [a] -> [[a]]
-chop _ [] = []
-chop n xs = take n xs : chop n (drop n xs)
 
 randApply :: PrimMonad m => a -> (a -> a) -> (Int, Int) -> Gen (PrimState m) -> m a
 randApply a f (x, y) rng

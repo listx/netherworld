@@ -37,13 +37,13 @@ battleLoop gs0 = do
 
 battlePlayerOption :: GameState -> IO GameState
 battlePlayerOption gs@GameState{..} = do
-	str <- getLine
-	if length (words str) > 0
-		then runOption str
-		else runOption gsLastBattleCommand
-	where
-	runOption :: String -> IO GameState
-	runOption str = case str of
+	(gs1, str) <- getUserInput gs
+	let
+		tokens = words str
+		str1 = if length tokens > 0
+		then str
+		else gsLastBattleCommand
+	case str1 of
 		"f" -> do
 			r <- roll 100 gsRng
 			let
@@ -51,22 +51,20 @@ battlePlayerOption gs@GameState{..} = do
 				gsMonsters2 = filter monsterAlive gsMonsters1
 			putStrLn $ "You do " ++ show r ++ " damage!"
 			if null gsMonsters2
-				then return gs
+				then return gs1
 					{ gsMonsters = []
 					, gsLastBattleCommand = ""
 					}
-				else return gs
+				else return gs1
 					{ gsMonsters = gsMonsters1
-					, gsLastBattleCommand = str
+					, gsLastBattleCommand = str1
 					}
 		_ -> do
 			putStrLn "What?"
-			battlePlayerOption gs
-				{ gsLastBattleCommand = str
+			battlePlayerOption gs1
+				{ gsLastBattleCommand = str1
 				}
-		where
---		tokens = words str
---		comHead = head tokens
+	where
 	modMonsterStat :: Attribute -> (Int -> Int) -> Monster -> Monster
 	modMonsterStat attr f m@Monster{..} = m
 		{ mStatsBase = modStat attr f mStatsBase
