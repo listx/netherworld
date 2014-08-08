@@ -9,6 +9,7 @@ import System.Random.MWC
 
 import NW.Affix
 import NW.Config
+import NW.Error
 import NW.Map
 import NW.Monster
 import NW.Player
@@ -55,7 +56,7 @@ gsDefault = GameState
 getUserInput :: GameState -> IO (GameState, String)
 getUserInput gs@GameState{..}
 	| gsReplay = do
-		putStrLn $ "getUserInput: replaying input `" ++ head gsInputHistory ++ "'"
+		dbgMsg gsDebug $ "getUserInput: replaying input `" ++ head gsInputHistory ++ "'"
 		return (gs {gsInputHistory = tail gsInputHistory}, head gsInputHistory)
 	| otherwise = do
 		str <- getLine

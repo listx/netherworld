@@ -20,8 +20,10 @@ executable netherworld
   build-depends:
       base >= 4.7 && < 4.8
     , bytestring >= 0.10.4.0 && < 0.11
+    , cmdargs >= 0.10.7 && < 0.11
     , containers >= 0.5 && < 0.6
     , cryptohash >= 0.11.5 && < 0.12
+    , directory >= 1.2.1.0 && < 1.3
     , filepath >= 1.3.0.2 && < 1.4
     , monads-tf >= 0.1.0.2 && < 0.2
     , mwc-random >= 0.13.1.2 && < 0.14

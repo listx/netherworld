@@ -33,12 +33,12 @@ gameLoop gs = do
 	nwPuts gs $ miniMapView m playerCoord
 	nwPuts gs $ show playerCoord
 	when (gsReplay gs) $ do
-		putStrLn $ "replay: playerCoord: " ++ show playerCoord
+		dbgMsg (gsDebug gs) $ "replay: playerCoord: " ++ show playerCoord
 	if (gsReplay gs) && null (gsInputHistory gs)
 		then do
-			putStrLn "End of game move history."
-			putStrLn $ miniMapView m playerCoord
-			putStrLn $ show playerCoord
+			dbgMsg (gsDebug gs) "End of game move history."
+			dbgMsg (gsDebug gs) $ miniMapView m playerCoord
+			dbgMsg (gsDebug gs) $ show playerCoord
 			return gs
 		else do
 			(gs1, str) <- getUserInput gs
@@ -62,7 +62,7 @@ gameLoop gs = do
 								nwPuts gs1 "Please provide a single savegame filepath."
 								gameLoop gs1
 							| otherwise -> do
-								gsx <- importGame (tokens!!1)
+								gsx <- importGame (gsDebug gs) (tokens!!1)
 								putStrLn "Game loaded successfully."
 								putStrLn "Entering world..."
 								gameLoop gsx
@@ -122,15 +122,15 @@ goIfOk gs@GameState{..} str
 -- reassign the gsInputHistory to what it was before, because this history must
 -- always store the *entire* game history, for game validation purposes. We also
 -- set the replay flag to false, to allow user interaction.
-importGame :: FilePath -> IO GameState
-importGame fname = do
+importGame :: Bool -> FilePath -> IO GameState
+importGame debug fname = do
 	fsrc <- T.readFile fname
 	(parseSuccess, (gs, rng)) <- parseSaveGame fname fsrc
 	when (not parseSuccess) $ do
 		errMsgn "importGame: parse failure"
 		exitFailure
-	putStrLn $ "importGame: " ++ show (gsInputHistory gs)
-	game <- simulateGame gs {gsReplay = True} rng
+	dbgMsg (gsDebug gs) $ "importGame: " ++ show (gsInputHistory gs)
+	game <- simulateGame gs {gsReplay = True, gsDebug = debug} rng
 	if isJust game
 		then do
 			let
@@ -158,9 +158,9 @@ simulateGame gs rngState = do
 			, gsRng = rngInitial
 			}
 	gs1 <- gameLoop gs0
-	putStrLn "simulateGame's gameLoop finished."
-	putStrLn $ "gsLastCommand: " ++ show (gsLastCommand gs)
-	putStrLn $ "gsInputHistory: " ++ show (gsInputHistory gs)
+	dbgMsg (gsDebug gs1) "simulateGame's gameLoop finished."
+	dbgMsg (gsDebug gs1) $ "gsLastCommand: " ++ show (gsLastCommand gs)
+	dbgMsg (gsDebug gs1) $ "gsInputHistory: " ++ show (gsInputHistory gs)
 	s <- (VU.toList . fromSeed) <$> save (gsRng gs1)
 	if
 		| rngState /= s -> e "rng mismatch"
