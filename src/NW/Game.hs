@@ -75,7 +75,11 @@ gameLoop gs = do
 						_ -> do
 							nwPuts gs1 "You stall in confusion."
 							gameLoop gs1
-				else goIfOk gs1 (gsLastCommand gs1)
+				else if null (gsLastCommand gs1)
+					then do
+						nwPuts gs1 "Confused already?"
+						gameLoop gs1
+					else goIfOk gs1 (gsLastCommand gs1)
 	where
 	directionals = ["e", "w", "n", "s", "ne", "nw", "se", "sw"]
 	m@GameMap{..} = gsGameMap gs
