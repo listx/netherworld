@@ -16,6 +16,7 @@ import System.Random.MWC
 import Text.Parsec.Combinator
 import qualified Text.Parsec.Prim as Prim
 import Text.Parsec.Text.Lazy
+import Text.Printf
 
 import NW.Affix
 import NW.Battle
@@ -186,8 +187,8 @@ saveGame GameState{..} fp
 	| otherwise = do
 		putStrLn $ show gsInputHistory
 		let
-			rngInitial = unlines . map unwords . chop 8 . map (indent . show) $ gsRngInitial
-		rng <- (unlines . map unwords . chop 8 . map (indent . show) . VU.toList . fromSeed) <$> save gsRng
+			rngInitial = unlines . map unwords . chop 8 . map (indent . printf "0x%08x") $ gsRngInitial
+		rng <- (unlines . map unwords . chop 8 . map (indent . printf "0x%08x") . VU.toList . fromSeed) <$> save gsRng
 		writeFile fp $ unlines
 			[ saveShow gsConfig
 			, saveShow gsPlayer
@@ -275,4 +276,4 @@ lastCommandParser = do
 	t_stringLiteral
 
 rngParser :: Parser [Int]
-rngParser = count 258 uintParser'
+rngParser = count 258 hexParser'

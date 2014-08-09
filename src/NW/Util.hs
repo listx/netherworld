@@ -108,6 +108,20 @@ uintParser' = do
 	_ <- t_whiteSpace
 	return n
 
+hexParser :: ParsecT T.Text u Identity Int
+hexParser = do
+	_ <- char '0'
+	n <- t_hexadecimal
+	let
+		n' = fromIntegral n
+	return n'
+
+hexParser' :: ParsecT T.Text u Identity Int
+hexParser' = do
+	n <- hexParser
+	_ <- t_whiteSpace
+	return n
+
 intRangeParser :: ParsecT T.Text u Identity (Int, Int)
 intRangeParser = try a <|> b
 	where
