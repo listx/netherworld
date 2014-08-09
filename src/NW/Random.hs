@@ -120,6 +120,8 @@ randApply a f (x, y) rng
 			then return (f a)
 			else return a
 
+-- | Simulate an n-sided die, by randomly choosing a number from the interval
+-- [1, n]. If n is 2, it is like a coin flip.
 roll :: PrimMonad m => Int -> Gen (PrimState m) -> m Int
 roll n
 	| n < 2 = error "roll argument less than 2"
