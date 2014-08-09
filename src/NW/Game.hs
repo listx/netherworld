@@ -104,18 +104,21 @@ goIfOk gs@GameState{..} str
 			{ gsLastCommand = str
 			}
 	where
-	d = case str of
-		"e" -> [East]
-		"w" -> [West]
-		"n" -> [North]
-		"s" -> [South]
-		"ne" -> [North, East]
-		"nw" -> [North, West]
-		"se" -> [South, East]
-		_ -> [South, West]
-	c = foldl goDir playerCoord d
+	c = foldl goDir playerCoord $ case lookup str dirs of
+		Just dir -> dir
+		Nothing -> error $ "unknown direction" ++ squote' str
 	m@GameMap{..} = gsGameMap
 	p@Player{..} = gsPlayer
+	dirs =
+		[ ("e", [East])
+		, ("w", [West])
+		, ("n", [North])
+		, ("s", [South])
+		, ("ne", [North, East])
+		, ("nw", [North, West])
+		, ("se", [South, East])
+		, ("sw", [South, West])
+		]
 
 -- | Parse savegame file and load it into the game, replaying everything until
 -- we run out of game history. Before we return the clean game state, we have to
