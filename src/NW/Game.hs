@@ -79,12 +79,17 @@ goIfOk :: GameState -> String -> IO GameState
 goIfOk gs@GameState{..} str
 	| inRange m c = case midx gameMapVector c of
 		Just _ -> do
+			warmups <- rndSample 8 [1..8] gsRng
 			let
 				gs1 = gs
 					{ gsGameMap = m
 					, gsPlayer = p {playerCoord = c}
 					, gsLastCommand = str
 					}
+				dirRngWarmups = zip (map fst dirs) warmups
+			case lookup str dirRngWarmups of
+				Just n -> void $ warmup n gsRng
+				Nothing -> return ()
 			r <- roll 100 gsRng
 			if (r < 7)
 				then do
