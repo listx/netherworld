@@ -138,7 +138,7 @@ importGame debug fname = do
 		errMsgn "importGame: parse failure"
 		exitFailure
 	dbgMsg (gsDebug gs) $ "importGame: " ++ show (gsInputHistory gs)
-	game <- simulateGame gs {gsReplay = True, gsDebug = debug} rng
+	game <- verifyGame gs {gsReplay = True, gsDebug = debug} rng
 	if isJust game
 		then do
 			let
@@ -152,9 +152,9 @@ importGame debug fname = do
 			exitFailure
 
 -- | Simulate a game by running all input history. Then, see if certain
--- important game data matches up.
-simulateGame :: GameState -> [Word32] -> IO (Maybe GameState)
-simulateGame gs rngState = do
+-- important game data match up.
+verifyGame :: GameState -> [Word32] -> IO (Maybe GameState)
+verifyGame gs rngState = do
 	gameMap <- importMap $ cfgMap (gsConfig gs)
 	affixDB <- importGMAffixes $ cfgAffixDB (gsConfig gs)
 	failIfEmpty affixDB "AffixDB"
@@ -166,7 +166,7 @@ simulateGame gs rngState = do
 			, gsRng = rngInitial
 			}
 	gs1 <- gameLoop gs0
-	dbgMsg (gsDebug gs1) "simulateGame's gameLoop finished."
+	dbgMsg (gsDebug gs1) "verifyGame's gameLoop finished."
 	dbgMsg (gsDebug gs1) $ "gsLastCommand: " ++ show (gsLastCommand gs)
 	dbgMsg (gsDebug gs1) $ "gsInputHistory: " ++ show (gsInputHistory gs)
 	s <- (VU.toList . fromSeed) <$> save (gsRng gs1)
@@ -176,7 +176,7 @@ simulateGame gs rngState = do
 		| otherwise -> return $ Just gs1
 	where
 	e m = do
-		errMsgn $ "simulateGame: " ++ m
+		errMsgn $ "verifyGame: " ++ m
 		return Nothing
 
 -- | Save the game. If we're doing a replay, don't do anything.
