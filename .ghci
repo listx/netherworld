@@ -1,0 +1,7 @@
+:l NW.Item
+:m +Control.Monad System.Random.MWC
+g <- create
+adb <- importGMAffixes "/home/l/prog/netherworld-assets-vanilla/affix-db.txt"
+is <- replicateM 50 (genRandomItem adb g)
+is <- replicateM 50 (genRandomItem adb g)
+mapM_ (putStrLn . renderItem) is
