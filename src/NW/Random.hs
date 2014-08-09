@@ -76,10 +76,12 @@ warmup n rng
 rndSample :: PrimMonad m => Int -> [a] -> Gen (PrimState m) -> m [a]
 rndSample 0 _ _ = return []
 rndSample _ [] _ = return []
-rndSample count xs gen = do
-	idx <- uniformR (0, (length xs) - 1) gen
-	rest <- rndSample (count - 1) (snd $ removeAt (idx + 1) xs) gen
-	return ((xs !! idx) : rest)
+rndSample count xs gen
+	| count < 0 = error "count must be at least 0"
+	| otherwise = do
+		idx <- uniformR (0, (length xs) - 1) gen
+		rest <- rndSample (count - 1) (snd $ removeAt idx xs) gen
+		return ((xs !! idx) : rest)
 
 -- | Randomly select a single element from a list.
 rndSelect :: PrimMonad m => [a] -> Gen (PrimState m) -> m a
@@ -90,7 +92,7 @@ rndSelect xs rng
 		return $ xs !! idx
 
 removeAt :: Int -> [a] -> (a, [a])
-removeAt n = (\(a, b) -> (head b, a ++ tail b)) . splitAt (n - 1)
+removeAt n = (\(a, b) -> (head b, a ++ tail b)) . splitAt n
 
 octetsLE :: Word32 -> [Word8]
 octetsLE w = map (fromIntegral . uncurry shiftR)
