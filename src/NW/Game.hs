@@ -47,7 +47,12 @@ gameLoop gs = do
 				tokens = words str
 			if length tokens > 0
 				then if
-					| elem (head tokens) directionals -> goIfOk gs1 str
+					| elem (head tokens) directionals -> do
+						let
+							gs2 = gs1
+								{ gsLastCommand = str
+								}
+						goIfOk gs2 str
 					| otherwise -> case head tokens of
 						"quit" -> return gs1
 						"q" -> return gs1
@@ -85,7 +90,6 @@ goIfOk gs@GameState{..} str
 				gs1 = gs
 					{ gsGameMap = m
 					, gsPlayer = p {playerCoord = c}
-					, gsLastCommand = str
 					}
 				dirRngWarmups = zip (map fst dirs) warmups
 			case lookup str dirRngWarmups of
@@ -102,13 +106,9 @@ goIfOk gs@GameState{..} str
 		Nothing -> do
 			nwPuts gs "You cannot go there."
 			gameLoop gs
-				{ gsLastCommand = str
-				}
 	| otherwise = do
 		nwPuts gs "You cannot go there."
 		gameLoop gs
-			{ gsLastCommand = str
-			}
 	where
 	c = foldl goDir playerCoord $ case lookup str dirs of
 		Just dir -> dir
