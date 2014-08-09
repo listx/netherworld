@@ -29,106 +29,109 @@ import NW.State
 import NW.Stats
 import NW.Util
 
+dirs :: [String]
+dirs = map fst dirHash
+
+dirHash :: [(String, [Direction])]
+dirHash =
+	[ ("e", [East])
+	, ("w", [West])
+	, ("n", [North])
+	, ("s", [South])
+	, ("ne", [North, East])
+	, ("nw", [North, West])
+	, ("se", [South, East])
+	, ("sw", [South, West])
+	]
+
 gameLoop :: GameState -> IO GameState
 gameLoop gs = do
-	nwPuts gs $ miniMapView m playerCoord
-	nwPuts gs $ show playerCoord
+	nwPuts gs $ miniMapView m pc
+	nwPuts gs $ show pc
 	when (gsReplay gs) $ do
-		dbgMsg (gsDebug gs) $ "replay: playerCoord: " ++ show playerCoord
+		dbgMsg (gsDebug gs) $ "replay: playerCoord: " ++ show pc
 	if (gsReplay gs) && null (gsInputHistory gs)
 		then do
 			dbgMsg (gsDebug gs) "End of game move history."
-			dbgMsg (gsDebug gs) $ miniMapView m playerCoord
-			dbgMsg (gsDebug gs) $ show playerCoord
+			dbgMsg (gsDebug gs) $ miniMapView m pc
+			dbgMsg (gsDebug gs) $ show pc
 			return gs
 		else do
 			(gs1, str) <- getUserInput gs
 			let
 				tokens = words str
-			if length tokens > 0
-				then if
-					| elem (head tokens) directionals -> do
-						let
-							gs2 = gs1
-								{ gsLastCommand = str
-								}
-						goIfOk gs2 str
-					| otherwise -> case head tokens of
-						"quit" -> return gs1
-						"q" -> return gs1
-						"save"
-							| length tokens /= 2 -> do
-								nwPuts gs1 "Please provide a single savegame filepath."
-								gameLoop gs1
-							| otherwise -> do
-								saveGame gs1 (tokens!!1)
-								gameLoop gs1
-						"load"
-							| length tokens /= 2 -> do
-								nwPuts gs1 "Please provide a single savegame filepath."
-								gameLoop gs1
-							| otherwise -> do
-								gsx <- importGame (gsDebug gs) (tokens!!1)
-								putStrLn "Game loaded successfully."
-								putStrLn "Entering world..."
-								gameLoop gsx
-						_ -> do
-							nwPuts gs1 "You stall in confusion."
+				lastCommand = gsLastCommand gs1
+				cmd
+					| length tokens > 0 = head tokens
+					| not (null lastCommand) = lastCommand
+					| otherwise = ""
+			if
+				| elem cmd dirs -> do
+					gs2 <- goIfOk gs1 {gsLastCommand = cmd} cmd
+					let
+						pc' = playerCoord $ gsPlayer gs2
+					if (pc /= pc')
+						then do
+							mixRng gs2 cmd
+							gs3 <- battleTrigger gs2
+							gameLoop gs3
+						else gameLoop gs2
+				| otherwise -> case cmd of
+					"quit" -> return gs1
+					"q" -> return gs1
+					"save"
+						| length tokens /= 2 -> do
+							nwPuts gs1 "Please provide a single savegame filepath."
 							gameLoop gs1
-				else if null (gsLastCommand gs1)
-					then do
+						| otherwise -> do
+							saveGame gs1 (tokens!!1)
+							gameLoop gs1
+					"load"
+						| length tokens /= 2 -> do
+							nwPuts gs1 "Please provide a single savegame filepath."
+							gameLoop gs1
+						| otherwise -> do
+							gsx <- importGame (gsDebug gs) (tokens!!1)
+							putStrLn "Game loaded successfully."
+							putStrLn "Entering world..."
+							gameLoop gsx
+					"" -> do
 						nwPuts gs1 "Confused already?"
 						gameLoop gs1
-					else goIfOk gs1 (gsLastCommand gs1)
+					_ -> do
+						nwPuts gs1 "You stall in confusion."
+						gameLoop gs1
 	where
-	directionals = ["e", "w", "n", "s", "ne", "nw", "se", "sw"]
-	m@GameMap{..} = gsGameMap gs
-	Player{..} = gsPlayer gs
+	m = gsGameMap gs
+	pc = playerCoord $ gsPlayer gs
 
 goIfOk :: GameState -> String -> IO GameState
 goIfOk gs@GameState{..} str
 	| inRange m c = case midx gameMapVector c of
-		Just _ -> do
-			warmups <- rndSample 8 [1..8] gsRng
-			let
-				gs1 = gs
-					{ gsGameMap = m
-					, gsPlayer = p {playerCoord = c}
-					}
-				dirRngWarmups = zip (map fst dirs) warmups
-			case lookup str dirRngWarmups of
-				Just n -> void $ warmup n gsRng
-				Nothing -> return ()
-			r <- roll 100 gsRng
-			if (r < 7)
-				then do
-					nwPuts gs "You enter a battle!!!"
-					gs2 <- spawnMonsters gs1
-					gs3 <- battleLoop gs2
-					gameLoop gs3
-				else gameLoop gs1
+		Just _ -> return gs
+			{ gsPlayer = p {playerCoord = c}
+			}
 		Nothing -> do
 			nwPuts gs "You cannot go there."
-			gameLoop gs
-	| otherwise = do
-		nwPuts gs "You cannot go there."
-		gameLoop gs
+			return gs
+	| otherwise = e
 	where
-	c = foldl goDir playerCoord $ case lookup str dirs of
+	c = foldl goDir playerCoord $ case lookup str dirHash of
 		Just dir -> dir
-		Nothing -> error $ "unknown direction" ++ squote' str
+		Nothing -> e
 	m@GameMap{..} = gsGameMap
 	p@Player{..} = gsPlayer
-	dirs =
-		[ ("e", [East])
-		, ("w", [West])
-		, ("n", [North])
-		, ("s", [South])
-		, ("ne", [North, East])
-		, ("nw", [North, West])
-		, ("se", [South, East])
-		, ("sw", [South, West])
-		]
+	e = error $ "unknown direction" ++ squote' str
+
+-- Mix RNG based on directional input.
+mixRng :: GameState -> String -> IO ()
+mixRng GameState{..} str = do
+	warmups <- rndSample 8 [1..8] gsRng
+	let
+		dirRngWarmups = zip dirs warmups
+	case lookup str dirRngWarmups of
+		Just n -> void $ warmup n gsRng
+		Nothing -> return ()
 
 -- | Parse savegame file and load it into the game, replaying everything until
 -- we run out of game history. Before we return the clean game state, we have to

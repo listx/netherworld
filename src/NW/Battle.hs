@@ -25,6 +25,17 @@ spawnMonsters gs@GameState{..} = do
 			, mLootBonus = 0
 			}
 
+battleTrigger :: GameState -> IO GameState
+battleTrigger gs@GameState{..} = do
+	r <- roll 100 gsRng
+	if (r < 7)
+		then do
+			nwPuts gs "You enter a battle!!!"
+			gs1 <- spawnMonsters gs
+			gs2 <- battleLoop gs1
+			return gs2
+		else return gs
+
 battleLoop :: GameState -> IO GameState
 battleLoop gs0 = do
 	gs1 <- battlePlayerOption gs0
