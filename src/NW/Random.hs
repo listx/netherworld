@@ -109,7 +109,13 @@ fromOctetsBE = foldl' accum 0
 fromOctetsLE :: [Word8] -> Word32
 fromOctetsLE = fromOctetsBE . reverse
 
-randApply :: PrimMonad m => a -> (a -> a) -> (Int, Int) -> Gen (PrimState m) -> m a
+randApply
+	:: PrimMonad m
+	=> a
+	-> (a -> a)
+	-> (Int, Int)
+	-> Gen (PrimState m)
+	-> m a
 randApply a f (x, y) rng
 	| x < 1 = error "randApply: numerator x is less than 1"
 	| y < 2 = error "randApply: denominator d is less than 2"

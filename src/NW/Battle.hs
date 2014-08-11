@@ -58,7 +58,8 @@ battlePlayerOption gs = do
 		"f" -> do
 			r <- roll 100 $ gsRng gs1
 			let
-				gsMonsters1 = map (modMonsterStat Health (\n -> n - r)) $ gsMonsters gs1
+				gsMonsters1 = map (modMonsterStat Health (\n -> n - r))
+					$ gsMonsters gs1
 				gsMonsters2 = filter monsterAlive gsMonsters1
 			nwPuts gs1 $ "You do " ++ show r ++ " damage!"
 			if null gsMonsters2
@@ -83,7 +84,8 @@ battlePlayerOption gs = do
 	monsterAlive :: Monster -> Bool
 	monsterAlive Monster{..} = case lookup Health mStatsBase of
 		Just n -> n > 0
-		Nothing -> True -- if monster is a non-health creature, it's always alive... like ghosts!
+	-- if monster is a non-health creature, it's always alive... like ghosts!
+		Nothing -> True
 
 battleMonsterOption :: GameState -> IO GameState
 battleMonsterOption gs@GameState{..} = do

@@ -32,7 +32,9 @@ data AffixClass
 	deriving (Eq, Enum, Show)
 
 instance Variate AffixClass where
-	uniform rng = return . toEnum =<< uniformR (fromEnum ACAdj, fromEnum ACName) rng
+	uniform rng = return
+		. toEnum
+		=<< uniformR (fromEnum ACAdj, fromEnum ACName) rng
 	uniformR _ _ = error "uniformR: Accessory unsupported"
 
 type AffixName = String
@@ -96,7 +98,8 @@ affixParser = do
 
 	if
 		| elem affixName' (map fst apsAffixNames)
-			-> duplicateDefinition "affix" apsAffixNames (affixName', posAffixName)
+			-> duplicateDefinition
+				"affix" apsAffixNames (affixName', posAffixName)
 		| otherwise -> do
 			modifyState $ addAffix (affixName', posAffixName)
 			return $ Affix

@@ -19,9 +19,18 @@ type Coord = (Int, Int)
 
 data Room = Room
 	{ rTile :: Tile
---	, rKey :: Maybe RoomKey -- if Just RoomKey, requires that particular key to be possessed by the player to enter this room
---	, rMobProb :: Int -- probably index of commencing a random fight encounter when entering this tile; 0 for no-fight zones, and 100 for always-fight zones
---	, rPModifier :: (PlayerStats -> PlayerStats) -- a modifier function that affects the player's stats (e.g., +10 fright for scary zones)
+-- if Just RoomKey, requires that particular key to be possessed by the player
+-- to enter this room
+--	, rKey :: Maybe RoomKey
+
+-- probably index of commencing a random fight encounter when entering this
+-- tile; 0 for no-fight zones, and 100 for always-fight zones
+--	, rMobProb :: Int
+
+-- a modifier function that affects the player's stats (e.g., +10 fright for
+-- scary zones)
+--	, rPModifier :: (PlayerStats -> PlayerStats)
+
 	} deriving (Eq, Show)
 
 roomDefault :: Room
@@ -53,15 +62,18 @@ importMap fp = do
 		mapSizeX = fromIntegral . maximum $ map T.length srcLines
 		mapSizeY = length srcLines
 		rooms :: V.Vector [(Coord, Maybe Room)]
-		rooms = (\(_, _, rows) -> V.fromList $ reverse rows) $ T.foldl mkRoom ((0, 0), [], []) revSrc
+		rooms = (\(_, _, rows) -> V.fromList $ reverse rows)
+			$ T.foldl mkRoom ((0, 0), [], []) revSrc
 	-- TODO: check input bounds
 	return $ GameMap
-		{ gameMapVector = V.map rowWise (V.zip (gmv (mapSizeX, mapSizeY)) $ rooms)
+		{ gameMapVector = V.map rowWise
+			(V.zip (gmv (mapSizeX, mapSizeY)) $ rooms)
 		, gameMapRange = (mapSizeX, mapSizeY)
 		}
 	where
 	gmv :: (Int, Int) -> GameMapVector
-	gmv (sizeX, sizeY) = V.generate sizeY (\y -> V.generate sizeX (\x -> ((x, y), Nothing)))
+	gmv (sizeX, sizeY) = V.generate sizeY
+		(\y -> V.generate sizeX (\x -> ((x, y), Nothing)))
 	mkRoom (coord@(x, y), row, rows) c = case c of
 			' ' -> skip
 			-- skip to next Y level; since newline determines whether the
@@ -75,7 +87,9 @@ importMap fp = do
 		setRoom t = Room
 			{ rTile = t
 			}
-	rowWise :: (V.Vector (Coord, Maybe Room), [(Coord, Maybe Room)]) -> V.Vector (Coord, Maybe Room)
+	rowWise
+		:: (V.Vector (Coord, Maybe Room), [(Coord, Maybe Room)])
+		-> V.Vector (Coord, Maybe Room)
 	rowWise (nothingsRow, xcoordRooms) = nothingsRow V.// xcoordRooms'
 		where
 		xcoordRooms' = map (\(coord@(x, _), mr) -> (x, (coord, mr))) xcoordRooms

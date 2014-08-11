@@ -65,44 +65,49 @@ gameLoop gs = do
 					| length tokens > 0 = head tokens
 					| not (null lastCommand) = lastCommand
 					| otherwise = ""
-			if
-				| elem cmd dirs -> do
-					gs2 <- goIfOk gs1 {gsLastCommand = cmd} cmd
-					let
-						pc' = playerCoord $ gsPlayer gs2
-					if (pc /= pc')
-						then do
-							mixRng gs2 cmd
-							gs3 <- battleTrigger gs2
-							gameLoop gs3
-						else gameLoop gs2
-				| otherwise -> case cmd of
-					"quit" -> return gs1
-					"q" -> return gs1
-					"save"
-						| length tokens /= 2 -> do
-							nwPuts gs1 "Please provide a single savegame filepath."
-							gameLoop gs1
-						| otherwise -> do
-							saveGame gs1 (tokens!!1)
-							gameLoop gs1
-					"load"
-						| length tokens /= 2 -> do
-							nwPuts gs1 "Please provide a single savegame filepath."
-							gameLoop gs1
-						| otherwise -> do
-							gsx <- importGame (gsDebug gs) (tokens!!1)
-							putStrLn "Game loaded successfully."
-							putStrLn "Entering world..."
-							gameLoop gsx
-					"" -> do
-						nwPuts gs1 "Confused already?"
-						gameLoop gs1
-					_ -> do
-						nwPuts gs1 "You stall in confusion."
-						gameLoop gs1
+			handleCommand gs1 tokens cmd
 	where
 	m = gsGameMap gs
+	pc = playerCoord $ gsPlayer gs
+
+handleCommand :: GameState -> [String] -> String -> IO GameState
+handleCommand gs tokens cmd
+	| elem cmd dirs = do
+		gs1 <- goIfOk gs {gsLastCommand = cmd} cmd
+		let
+			pc' = playerCoord $ gsPlayer gs1
+		if (pc /= pc')
+			then do
+				mixRng gs1 cmd
+				gs2 <- battleTrigger gs1
+				gameLoop gs2
+			else gameLoop gs1
+	| otherwise = case cmd of
+		"quit" -> return gs
+		"q" -> return gs
+		"save"
+			| length tokens /= 2 -> do
+				nwPuts gs "Please provide a single savegame filepath."
+				gameLoop gs
+			| otherwise -> do
+				saveGame gs (tokens!!1)
+				gameLoop gs
+		"load"
+			| length tokens /= 2 -> do
+				nwPuts gs "Please provide a single savegame filepath."
+				gameLoop gs
+			| otherwise -> do
+				gsx <- importGame (gsDebug gs) (tokens!!1)
+				putStrLn "Game loaded successfully."
+				putStrLn "Entering world..."
+				gameLoop gsx
+		"" -> do
+			nwPuts gs "Confused already?"
+			gameLoop gs
+		_ -> do
+			nwPuts gs "You stall in confusion."
+			gameLoop gs
+	where
 	pc = playerCoord $ gsPlayer gs
 
 goIfOk :: GameState -> String -> IO GameState
@@ -194,8 +199,19 @@ saveGame GameState{..} fp
 	| otherwise = do
 		putStrLn $ show gsInputHistory
 		let
-			rngInitial = unlines . map unwords . chop 8 . map (indent . printf "0x%08x") $ gsRngInitial
-		rng <- (unlines . map unwords . chop 8 . map (indent . printf "0x%08x") . VU.toList . fromSeed) <$> save gsRng
+			rngInitial = unlines
+				. map unwords
+				. chop 8
+				. map (indent . printf "0x%08x")
+				$ gsRngInitial
+		rng <-
+			( unlines
+			. map unwords
+			. chop 8
+			. map (indent . printf "0x%08x")
+			. VU.toList
+			. fromSeed
+			) <$> save gsRng
 		writeFile fp $ unlines
 			[ saveShow gsConfig
 			, saveShow gsPlayer
@@ -218,7 +234,10 @@ instance Save Config where
 instance Save Player where
 	saveShow Player{..} = unlines
 		[ "player-coord " ++ show x ++ " " ++ show y
-		, "player-stats " ++ "{\n" ++ unlines (map (indent . showTuple) playerStats) ++ "}"
+		, "player-stats "
+			++ "{\n"
+			++ unlines (map (indent . showTuple) playerStats)
+			++ "}"
 		]
 		where
 		x = fst playerCoord

@@ -56,7 +56,8 @@ lexer = makeTokenParser gameDataFormatDef
 
 t_decimal :: ParsecT T.Text u Identity Integer
 t_decimal = decimal lexer
--- NOTE: as of Parsec 3.1.5, `hexadecimal` expects numbers with a leading 'x', not a '0x'!
+-- NOTE: as of Parsec 3.1.5, `hexadecimal` expects numbers with a leading 'x',
+-- not a '0x'!
 t_hexadecimal :: ParsecT T.Text u Identity Integer
 t_hexadecimal = hexadecimal lexer
 t_natural :: ParsecT T.Text u Identity Integer
@@ -155,7 +156,10 @@ choice' ps = choice $ tries ++ [lastOne]
 	tries = map try (init ps)
 	lastOne = last ps
 
-symbolA :: String -> (ParsecT T.Text u Identity a) -> ParsecT T.Text u Identity (SourcePos, a)
+symbolA
+	:: String
+	-> (ParsecT T.Text u Identity a)
+	-> ParsecT T.Text u Identity (SourcePos, a)
 symbolA str parser = do
 	_ <- t_symbol str
 	pos <- getPosition
@@ -197,7 +201,12 @@ headingBody heading body = (intercalate "\n" heading)
 	++ "\n"
 	++ (intercalate "\n" $ map indent body)
 
-parseErrMsg :: (Eq a, Show a, Monad m) => String -> String -> (String, a, SourcePos) -> m b
+parseErrMsg
+	:: (Eq a, Show a, Monad m)
+	=> String
+	-> String
+	-> (String, a, SourcePos)
+	-> m b
 parseErrMsg msg valLocation (valType, val, pos) = fail
 	$ headingBody
 		[ ""

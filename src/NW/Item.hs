@@ -45,7 +45,9 @@ data Armor
 	deriving (Eq, Enum, Show)
 
 instance Variate Armor where
-	uniform rng = return . toEnum =<< uniformR (fromEnum Helm, fromEnum Shield) rng
+	uniform rng = return
+		. toEnum
+		=<< uniformR (fromEnum Helm, fromEnum Shield) rng
 	uniformR _ _ = error "uniformR: Armor unsupported"
 
 data Weapon
@@ -59,7 +61,9 @@ data Weapon
 	deriving (Eq, Enum, Show)
 
 instance Variate Weapon where
-	uniform rng = return . toEnum =<< uniformR (fromEnum Sword, fromEnum Staff) rng
+	uniform rng = return
+		. toEnum
+		=<< uniformR (fromEnum Sword, fromEnum Staff) rng
 	uniformR _ _ = error "uniformR: Weapon unsupported"
 
 data Accessory
@@ -70,7 +74,9 @@ data Accessory
 	deriving (Eq, Enum, Show)
 
 instance Variate Accessory where
-	uniform rng = return . toEnum =<< uniformR (fromEnum Ring, fromEnum Bracelet) rng
+	uniform rng = return
+		. toEnum
+		=<< uniformR (fromEnum Ring, fromEnum Bracelet) rng
 	uniformR _ _ = error "uniformR: Accessory unsupported"
 
 data Item = Item
@@ -105,7 +111,8 @@ genRandomItem adb rng = do
 			-- there is only a small percent chance that we'll get a NAME affix.
 
 			-- The possibilities are:
-			-- * 1 adj only ("steel gloves") (can't just be 'gloves' because that's too barren)
+			-- * 1 adj only ("steel gloves") (can't just be 'gloves' because
+			--   that's too barren)
 			-- * 1 proper noun suffix ("gloves of the bear")
 			-- * 1 noun suffix ("shield of doom")
 			-- * 1 persona ("assassin's dagger" or "dagger of the assassin")
@@ -126,7 +133,10 @@ genRandomItem adb rng = do
 		}
 
 
--- | The only modifier that affects the player at a variable rate is damage done; all others (health, mana, defense, resistance, life steal, etc.) affect the character at a constant rate. Thus, we "rasterize" any NVRange value we find for damage modifiers.
+-- | The only modifier that affects the player at a variable rate is damage
+-- done; all others (health, mana, defense, resistance, life steal, etc.) affect
+-- the character at a constant rate. Thus, we "rasterize" any NVRange value we
+-- find for damage modifiers.
 rasterizeAffix :: PrimMonad m => Gen (PrimState m) -> Affix -> m Affix
 rasterizeAffix rng affix@Affix{..} = do
 	es <- mapM (rasterizeEffect rng) affixEffects

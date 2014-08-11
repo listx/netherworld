@@ -56,7 +56,8 @@ gsDefault = GameState
 getUserInput :: GameState -> IO (GameState, String)
 getUserInput gs@GameState{..}
 	| gsReplay = do
-		dbgMsg gsDebug $ "getUserInput: replaying input `" ++ head gsInputHistory ++ "'"
+		dbgMsg gsDebug
+			$ "getUserInput: replaying input `" ++ head gsInputHistory ++ "'"
 		return (gs {gsInputHistory = tail gsInputHistory}, head gsInputHistory)
 	| otherwise = do
 		str <- getLine

@@ -27,7 +27,8 @@ fatal msg errNo = do
 
 -- | A more user-friendly way to generate a failure message upon a failed parse.
 fail' :: Monad m => String -> [String] -> m a
-fail' got expected = fail ("got: " ++ squote got ++ " --- expected: " ++ optionalMsg ++ quoteExpected)
+fail' got expected = fail
+	$ "got: " ++ squote got ++ " --- expected: " ++ optionalMsg ++ quoteExpected
 	where
 	quoteExpected = intercalate ", " $ map squote expected
 	optionalMsg = if length expected > 1
