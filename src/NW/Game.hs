@@ -197,7 +197,6 @@ saveGame :: GameState -> FilePath -> IO ()
 saveGame GameState{..} fp
 	| gsReplay = return ()
 	| otherwise = do
-		putStrLn $ show gsInputHistory
 		let
 			rngInitial = unlines
 				. map unwords
