@@ -217,7 +217,7 @@ saveGame GameState{..} fp
 			, "last-command " ++ show gsLastCommand ++ "\n"
 			, "rng-initial\n" ++ rngInitial
 			, "rng\n" ++ rng
-			, "input-history " ++ show gsInputHistory
+			, "input-history " ++ show (reverse gsInputHistory)
 			]
 
 class Save a where
@@ -261,7 +261,7 @@ saveGameParser = do
 	_ <- t_symbol "rng"
 	rng <- map fromIntegral <$> rngParser
 	_ <- t_symbol "input-history"
-	hist <- reverse <$> t_brackets (sepBy1 t_stringLiteral (t_symbol ","))
+	hist <- t_brackets (sepBy1 t_stringLiteral (t_symbol ","))
 	eof
 	return . flip (,) rng $ gsDefault
 		{ gsConfig = config
