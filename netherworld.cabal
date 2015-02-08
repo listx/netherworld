@@ -1,7 +1,7 @@
 name: netherworld
 version: 0.0.0.0
 synopsis: A simple RPG
-license: FreeBSD
+license: BSD2
 license-file: LICENSE
 author: Linus Arver
 maintainer: linusarver@gmail.com
